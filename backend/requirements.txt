@@ -6,6 +6,7 @@ pydantic
 pydantic-settings
 email-validator
 SQLAlchemy
+psycopg[binary]
 alembic
 passlib[bcrypt]
 python-jose[cryptography]
@@ -17,4 +18,3 @@ sentence-transformers
 chromadb
 pytest
 pytest-asyncio
-

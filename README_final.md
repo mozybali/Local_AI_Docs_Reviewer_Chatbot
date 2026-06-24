@@ -88,7 +88,7 @@ LocalDoc AI, dokümanları lokal ortamda işler ve lokal LLM kullanarak cevap ü
 | Frontend (web) | React veya Next.js |
 | Kimlik doğrulama | JWT (python-jose) + bcrypt (passlib) |
 | Vektör veritabanı | ChromaDB |
-| İlişkisel veritabanı | Postqres |
+| İlişkisel veritabanı | PostgreSQL |
 | Lokal LLM | LM Studio |
 | Embedding modeli | `bge-m3` veya `paraphrase-multilingual-MiniLM-L12-v2` |
 | Chunk stratejisi | 512 token, 50 token overlap |
@@ -135,7 +135,7 @@ Proje başarılı kabul edilmek için aşağıdaki kriterleri sağlamalıdır:
 - Lokal LLM yalnızca getirilen bağlama dayanarak cevap üretmelidir.
 - Her cevapta en az bir kaynak gösterilmelidir.
 - Dokümanda bulunmayan sorulara standart yanıt dönülmelidir: `Bu bilgi yüklenen dokümanda bulunamadı.`
-- Doküman silindiğinde ilişkili SQLite kayıtları, ChromaDB vektörleri ve fiziksel dosya silinmelidir.
+- Doküman silindiğinde ilişkili PostgreSQL kayıtları, ChromaDB vektörleri ve fiziksel dosya silinmelidir.
 - En az 10-15 soruluk ground truth test seti hazırlanmalıdır.
 - Recall@5 ve MRR metrikleri hesaplanmalıdır.
 - En az 5 negatif soru ile hallüsinasyon kontrolü yapılmalıdır.
@@ -180,7 +180,7 @@ Sistem ilk kez çalıştırıldığında, `.env` içindeki `DEFAULT_ADMIN_EMAIL`
 | Async görev yönetimi | FastAPI BackgroundTasks |
 | Lokal AI | LM Studio |
 | Vektör veritabanı | ChromaDB |
-| İlişkisel veritabanı | Postgres |
+| İlişkisel veritabanı | PostgreSQL |
 | Dosya işleme | pypdf, pdfplumber, python-docx |
 | Embedding | sentence-transformers, bge-m3, multilingual modeller |
 | Ortam yönetimi | python-dotenv |
@@ -243,7 +243,7 @@ Basit ve staj kapsamında yönetilebilir olması için yalnızca iki rol tanıml
 
 Her doküman bir kullanıcıya aittir. İzolasyon iki katmanda sağlanır:
 
-- **SQLite tarafında:** `documents` ve `conversations` tablolarına `user_id` foreign key eklenir. Tüm sorgular giriş yapmış kullanıcının `user_id` değeriyle filtrelenir.
+- **PostgreSQL tarafında:** `documents` ve `conversations` tablolarına `user_id` foreign key eklenir. Tüm sorgular giriş yapmış kullanıcının `user_id` değeriyle filtrelenir.
 - **ChromaDB tarafında:** Her vektörün metadata'sına `user_id` eklenir. Semantik arama yapılırken sorgu, kullanıcının `user_id` değerine göre `where` filtresiyle sınırlandırılır. Böylece bir kullanıcının sorusu asla başka kullanıcının chunk'larıyla eşleşmez.
 - `admin` rolü bu filtreyi atlayarak tüm dokümanlara erişebilir (yalnızca admin endpoint'lerinde).
 
@@ -272,7 +272,7 @@ Her doküman bir kullanıcıya aittir. İzolasyon iki katmanda sağlanır:
         │   └── LLM Service                        │
         └─────────────────────────────────────────┘
                           ↓
-        Postgres Metadata DB (users, documents, chunks, conversations, messages)
+        PostgreSQL Metadata DB (users, documents, chunks, conversations, messages)
                           ↓
         ChromaDB Vector Store (metadata: user_id, document_id, page ...)
                           ↓
@@ -324,7 +324,7 @@ Cevap + kaynak gösterimi
 1. Giriş yapmış kullanıcı PDF veya TXT dosyası yükler (token zorunludur).
 2. Backend dosya türünü, MIME type değerini ve dosya boyutunu kontrol eder.
 3. Dosya adı sanitize edilir ve `uploads/` klasörüne güvenli şekilde kaydedilir.
-4. SQLite `documents` tablosuna, dokümanı yükleyen kullanıcının `user_id` değeriyle birlikte kayıt atılır.
+4. PostgreSQL `documents` tablosuna, dokümanı yükleyen kullanıcının `user_id` değeriyle birlikte kayıt atılır.
 5. Doküman durumu `processing` yapılır.
 6. Kullanıcıya `202 Accepted` ile `document_id` döner.
 
@@ -334,7 +334,7 @@ Cevap + kaynak gösterimi
 2. Dosyadan metin çıkarılır.
 3. Metin boşsa doküman `error` durumuna alınır.
 4. Metin 512 token boyutunda ve 50 token overlap ile chunk'lara ayrılır.
-5. Chunk kayıtları SQLite'a yazılır.
+5. Chunk kayıtları PostgreSQL'e yazılır.
 6. Her chunk için embedding oluşturulur.
 7. Embedding vektörleri metadata ile birlikte (doküman `user_id`'si dahil) ChromaDB'ye yazılır.
 8. İşlem tamamlanınca doküman durumu `ready` yapılır.
@@ -450,16 +450,16 @@ localdoc-ai/
 
 ```sql
 CREATE TABLE users (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    id              SERIAL PRIMARY KEY,
     email           TEXT NOT NULL UNIQUE,
     hashed_password TEXT NOT NULL,
     role            TEXT NOT NULL DEFAULT 'user',  -- 'user' veya 'admin'
-    is_active       INTEGER NOT NULL DEFAULT 1,
-    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE documents (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    id          SERIAL PRIMARY KEY,
     user_id     INTEGER NOT NULL,
     filename    TEXT NOT NULL,
     original_filename TEXT NOT NULL,
@@ -467,35 +467,35 @@ CREATE TABLE documents (
     file_path   TEXT NOT NULL,
     status      TEXT DEFAULT 'uploaded',
     error_msg   TEXT,
-    upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    upload_date TIMESTAMPTZ DEFAULT NOW(),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE chunks (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    id           SERIAL PRIMARY KEY,
     document_id  INTEGER NOT NULL,
     chunk_text   TEXT NOT NULL,
     page_number  INTEGER,
     chunk_index  INTEGER NOT NULL,
     vector_id    TEXT,
-    created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at   TIMESTAMPTZ DEFAULT NOW(),
     FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
 );
 
 CREATE TABLE conversations (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    id         SERIAL PRIMARY KEY,
     user_id    INTEGER NOT NULL,
     title      TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE messages (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    id              SERIAL PRIMARY KEY,
     conversation_id INTEGER NOT NULL,
     role            TEXT NOT NULL,
     content         TEXT NOT NULL,
-    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
     FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
 );
 ```
@@ -652,7 +652,7 @@ GET /documents
 DELETE /documents/{document_id}
 ```
 
-Silme işlemi SQLite, ChromaDB ve fiziksel dosyayı kapsamalıdır.
+Silme işlemi PostgreSQL, ChromaDB ve fiziksel dosyayı kapsamalıdır.
 
 ### Semantik Arama
 
@@ -782,7 +782,7 @@ DELETE /admin/documents/{document_id}
 Authorization: Bearer <admin_token>
 ```
 
-Admin, sahibinden bağımsız olarak herhangi bir dokümanı silebilir. Silme işlemi SQLite, ChromaDB ve fiziksel dosyayı kapsar.
+Admin, sahibinden bağımsız olarak herhangi bir dokümanı silebilir. Silme işlemi PostgreSQL, ChromaDB ve fiziksel dosyayı kapsar.
 
 ### Admin — Sistem İstatistikleri
 
@@ -818,7 +818,7 @@ MAX_FILE_SIZE_MB=50
 ALLOWED_EXTENSIONS=pdf,txt,docx
 
 # Veritabanı
-DATABASE_URL=sqlite:///./localdoc.db
+DATABASE_URL=postgresql+psycopg://localdoc:localdoc@localhost:5432/localdoc_ai
 
 # Kimlik doğrulama (JWT)
 JWT_SECRET_KEY=degistir_bu_degeri_uretimde
@@ -830,9 +830,9 @@ DEFAULT_ADMIN_EMAIL=admin@localdoc.ai
 DEFAULT_ADMIN_PASSWORD=degistir_beni
 
 # Lokal LLM
-LLM_PROVIDER=ollama
-LLM_API_URL=http://localhost:11434
-LLM_MODEL_NAME=qwen2.5:7b
+LLM_PROVIDER=lmstudio
+LLM_API_URL=http://localhost:1234/v1
+LLM_MODEL_NAME=local-model
 
 # Vektör veritabanı
 VECTOR_STORE=chromadb
@@ -863,7 +863,6 @@ __pycache__/
 venv/
 uploads/
 chroma_db/
-localdoc.db
 node_modules/
 ```
 
@@ -907,7 +906,7 @@ Backend ilk kez başlatıldığında, `.env` içindeki `DEFAULT_ADMIN_EMAIL` ve 
 1. LM Studio uygulamasını açın.
 2. Uygun bir instruct modeli indirin.
 3. Local server'ı başlatın.
-4. `.env` içindeki `LLM_API_URL` ve `LLM_MODEL_NAME` değerlerini güncelleyin.
+4. `.env` içindeki `LLM_API_URL` ve `LLM_MODEL_NAME` değerlerini LM Studio local server ayarlarınıza göre güncelleyin.
 
 ---
 
@@ -925,7 +924,7 @@ Backend ve frontend başlangıç yapısını kurmak, JWT tabanlı kimlik doğrul
 - React veya Next.js frontend başlatılır.
 - CORS ayarları yapılır.
 - `.env` ve `.env.example` hazırlanır.
-- SQLite bağlantısı kurulur.
+- PostgreSQL bağlantısı kurulur.
 - `users` ve `documents` tabloları oluşturulur.
 - Şifre hash'leme (bcrypt/passlib) ve JWT üretimi/doğrulama yardımcıları yazılır (`security.py`).
 - `/auth/register`, `/auth/login` ve `/auth/me` endpoint'leri yazılır.
@@ -943,7 +942,7 @@ Backend ve frontend başlangıç yapısını kurmak, JWT tabanlı kimlik doğrul
 - Kullanıcı e-posta/şifre ile kayıt olup giriş yapabilmeli ve geçerli bir JWT alabilmelidir.
 - Şifreler veritabanında hash'lenmiş olarak saklanmalıdır.
 - Token olmadan yükleme endpoint'i `401` dönmelidir.
-- Yüklenen doküman doğru `user_id` ile SQLite'a kaydedilmelidir.
+- Yüklenen doküman doğru `user_id` ile PostgreSQL'e kaydedilmelidir.
 - Desteklenmeyen veya boş dosya için açıklayıcı hata dönmelidir.
 
 ### Hafta Sonu Çıktısı
@@ -979,7 +978,7 @@ Yüklenen dokümanları API isteğini bloke etmeden arka planda işlemek, chunk'
 - Dosya yükleme isteği uzun işlem beklemeden `202 Accepted` dönmelidir.
 - İşleme süreci durum endpoint'iyle takip edilebilmelidir.
 - Başarılı işlemede durum `ready`, hatada `error` ve `error_msg` olmalıdır.
-- Chunk kayıtları SQLite'a yazılmalıdır.
+- Chunk kayıtları PostgreSQL'e yazılmalıdır.
 - Kullanıcı yalnızca kendi dokümanlarını listeleyebilmelidir.
 - Başka kullanıcının dokümanına erişim `403`/`404` dönmelidir.
 - Doküman silindiğinde ilişkili chunk'lar da silinmelidir.
@@ -1004,7 +1003,7 @@ Doküman chunk'larını embedding vektörlerine dönüştürmek, ChromaDB'ye kul
 - Her chunk için embedding oluşturulur.
 - ChromaDB bağlantısı kurulur.
 - Vektörler metadata ile birlikte (`user_id`, `document_id`, `page`, `chunk_index`) ChromaDB'ye kaydedilir.
-- `vector_id` alanı SQLite'taki chunk kaydıyla ilişkilendirilir.
+- `vector_id` alanı PostgreSQL'deki chunk kaydıyla ilişkilendirilir.
 - Kullanıcı sorusu embedding'e dönüştürülür.
 - ChromaDB `where` filtresiyle kullanıcının `user_id` değerine göre top-5 semantik arama yapılır.
 - `/search` endpoint'i yazılır (korumalı ve kullanıcı bazlı).
@@ -1037,7 +1036,7 @@ Retrieval sonuçlarını lokal LLM'e bağlam olarak verip kaynaklı ve kontroll�
 
 ### Yapılacaklar
 
-- Ollama veya LM Studio kurulumu yapılır.
+- LM Studio kurulumu yapılır.
 - Lokal LLM modeli seçilir.
 - `llm_service.py` yazılır.
 - LLM bağlantısı test edilir.
@@ -1340,7 +1339,7 @@ Dosya yükleyen ve çok kullanıcılı sistemlerde minimum güvenlik kontrolleri
 | Dosya çok büyük | Maksimum dosya boyutu 50 MB'tır. |
 | Boş dosya | Yüklenen dosya boş görünüyor. |
 | Bozuk veya şifreli PDF | Bu PDF okunamadı. Şifreli veya bozuk olabilir. |
-| LLM bağlantı hatası | Lokal AI modeli çalışmıyor. Ollama veya LM Studio server'ını başlatın. |
+| LLM bağlantı hatası | Lokal AI modeli çalışmıyor. LM Studio local server'ını başlatın. |
 | Embedding hatası | Embedding modeli yüklenemedi. Lütfen tekrar deneyin. |
 | Doküman hazır değil | Bu doküman henüz işleniyor. Lütfen işlem tamamlandıktan sonra tekrar deneyin. |
 | Geçersiz kimlik bilgileri | E-posta veya şifre hatalı. |
@@ -1359,7 +1358,7 @@ Dosya yükleyen ve çok kullanıcılı sistemlerde minimum güvenlik kontrolleri
 | PDF metni düzgün çıkarılamayabilir | Cevap kalitesi düşer | pdfplumber alternatifi eklenir, hata mesajı verilir |
 | Embedding modeli Türkçe'de zayıf kalabilir | Retrieval kalitesi düşer | bge-m3 veya multilingual model denenir |
 | Model bilgi uydurabilir | Yanlış cevap üretir | Sıkı RAG prompt ve negatif test soruları kullanılır |
-| Silinen doküman aramada çıkabilir | Yanlış kaynak döner | SQLite ve ChromaDB silme işlemleri birlikte yapılır |
+| Silinen doküman aramada çıkabilir | Yanlış kaynak döner | PostgreSQL ve ChromaDB silme işlemleri birlikte yapılır |
 | Kapsam büyüyebilir | Proje yetişmez | MVP ve kapsam dışı maddeler korunur |
 | Donanım yetersiz olabilir | Model çalışmayabilir | 3B/4B model veya quantized model kullanılır |
 | Kimlik doğrulama kapsamı genişleyebilir | Auth işi büyür, plan sarkar | OAuth, sosyal giriş, şifre sıfırlama kapsam dışı tutulur; yalnızca e-posta/şifre + JWT yapılır |
@@ -1430,7 +1429,7 @@ Proje sonunda aşağıdaki çıktılar teslim edilmelidir:
 
 | Hafta | Ana Odak | Kritik Çıktı | Kabul Göstergesi |
 |---|---|---|---|
-| 1 | Kurulum, kimlik doğrulama ve dosya yükleme | Backend, SQLite, JWT auth, upload endpoint | Kullanıcı kayıt/giriş yapar, token ile PDF/TXT yükler |
+| 1 | Kurulum, kimlik doğrulama ve dosya yükleme | Backend, PostgreSQL, JWT auth, upload endpoint | Kullanıcı kayıt/giriş yapar, token ile PDF/TXT yükler |
 | 2 | Async işleme, chunking ve çok kullanıcılı dokümanlar | BackgroundTasks, chunk tablosu, `user_id` ile izolasyon | Doküman `ready` durumuna geçer, kullanıcı yalnızca kendi dokümanını görür |
 | 3 | Embedding ve retrieval | ChromaDB, `user_id` filtreli top-5 semantik arama | Doğru kaynak ilk 5 sonuçta, sadece kullanıcının kendi dokümanlarından bulunur |
 | 4 | Lokal LLM ve RAG | `/chat/ask`, prompt, kaynaklı cevap | Dokümandan cevap üretir, kaynak gösterir |

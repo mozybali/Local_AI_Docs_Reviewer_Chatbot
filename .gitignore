@@ -5,7 +5,6 @@ __pycache__/
 venv/
 .venv/
 node_modules/
-localdoc.db
 backend/uploads/*
 !backend/uploads/.gitkeep
 backend/chroma_db/*
