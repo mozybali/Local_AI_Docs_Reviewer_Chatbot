@@ -1,0 +1,12 @@
+.env
+.env.local
+__pycache__/
+.pytest_cache/
+venv/
+.venv/
+node_modules/
+localdoc.db
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/chroma_db/*
+!backend/chroma_db/.gitkeep
