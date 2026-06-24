@@ -601,6 +601,20 @@ POST /documents/upload
 Content-Type: multipart/form-data
 ```
 
+Form alanı:
+
+| Alan | Tip | Açıklama |
+| --- | --- | --- |
+| `file` | `UploadFile` | Yüklenecek PDF veya TXT dosyası |
+
+Örnek istek:
+
+```bash
+curl -X POST http://localhost:8000/documents/upload \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@ornek.pdf"
+```
+
 Örnek cevap:
 
 ```json
