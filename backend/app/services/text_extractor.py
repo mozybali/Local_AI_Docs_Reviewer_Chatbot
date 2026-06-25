@@ -1,10 +1,13 @@
-"""Metin çıkarma servisi (PDF ve TXT).
+"""Metin çıkarma servisi (PDF, TXT ve DOCX).
 
 Sayfa numarası bilgisini koruyacak şekilde, doküman içeriğini sayfa sayfa
-çıkarır. Bu sayede ileride (Hafta 2-3) chunk'lara sayfa numarası eklenebilir.
+çıkarır. Bu sayede chunk'lara sayfa numarası eklenebilir.
 
 PDF için önce `pdfplumber`, başarısız olursa `pypdf` denenir. Şifreli veya bozuk
 PDF'ler `TextExtractionError` ile işaretlenir.
+
+DOCX (python-docx) dosyalarında güvenilir bir sayfa kavramı bulunmadığı için
+tüm metin tek sayfa (`page_number=1`) olarak çıkarılır.
 """
 
 from __future__ import annotations
@@ -35,7 +38,8 @@ def extract_pages(file_path: str, file_type: str) -> list[ExtractedPage]:
         return _extract_pdf(file_path)
     if ext == "txt":
         return _extract_txt(file_path)
-    # DOCX desteği Hafta 2'de eklenecek.
+    if ext == "docx":
+        return _extract_docx(file_path)
     raise TextExtractionError(f"Desteklenmeyen dosya tipi: {ext}")
 
 
@@ -53,6 +57,32 @@ def _extract_txt(file_path: str) -> list[ExtractedPage]:
     except UnicodeDecodeError:
         text = raw.decode("latin-1", errors="replace")
     return [ExtractedPage(page_number=1, text=text.strip())]
+
+
+def _extract_docx(file_path: str) -> list[ExtractedPage]:
+    """DOCX dosyasından metni çıkarır.
+
+    python-docx sayfa sınırlarını vermediği için tüm paragraflar tek bir
+    sayfa olarak birleştirilir. Bozuk/desteklenmeyen dosyalar
+    `TextExtractionError` ile işaretlenir.
+    """
+    try:
+        import docx  # python-docx
+    except ImportError:  # pragma: no cover - bağımlılık eksikse
+        raise TextExtractionError(
+            "DOCX desteği için python-docx kurulu değil."
+        )
+
+    try:
+        document = docx.Document(file_path)
+    except Exception:
+        raise TextExtractionError(
+            "Bu DOCX dosyası okunamadı. Bozuk olabilir."
+        )
+
+    paragraphs = [p.text for p in document.paragraphs if p.text and p.text.strip()]
+    text = "\n".join(paragraphs).strip()
+    return [ExtractedPage(page_number=1, text=text)]
 
 
 def _extract_pdf(file_path: str) -> list[ExtractedPage]:

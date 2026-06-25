@@ -625,7 +625,7 @@ curl -X POST http://localhost:8000/documents/upload \
   -F "file=@ornek.pdf"
 ```
 
-Örnek cevap (`201 Created`):
+Örnek cevap (`202 Created`):
 
 ```json
 {

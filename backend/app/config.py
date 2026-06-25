@@ -15,9 +15,8 @@ class Settings(BaseSettings):
     # Dosya yükleme
     UPLOAD_DIR: str = "uploads"
     MAX_FILE_SIZE_MB: int = 50
-    # Hafta 1: yalnızca PDF/TXT. DOCX, text_extractor'a python-docx desteği
-    # eklenince (Hafta 2) bu listeye geri eklenecek.
-    ALLOWED_EXTENSIONS: str = "pdf,txt"
+    # Hafta 2: PDF, TXT ve DOCX desteklenir (text_extractor python-docx kullanır).
+    ALLOWED_EXTENSIONS: str = "pdf,txt,docx"
 
     # Veritabanı
     DATABASE_URL: str = (

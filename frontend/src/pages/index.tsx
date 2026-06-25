@@ -24,6 +24,19 @@ export default function HomePage() {
             <Link href="/upload">
               <button style={ui.button}>Doküman Yükle</button>
             </Link>
+            <Link href="/documents">
+              <button
+                style={{
+                  ...ui.button,
+                  background: "transparent",
+                  color: "#60a5fa",
+                  border: "1px solid #334155",
+                  marginTop: "0.75rem",
+                }}
+              >
+                Dokümanlarım
+              </button>
+            </Link>
             <button
               type="button"
               onClick={logout}

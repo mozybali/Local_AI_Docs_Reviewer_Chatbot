@@ -101,14 +101,20 @@ export default function UploadPage() {
         </div>
 
         <h1 style={ui.title}>Doküman Yükle</h1>
-        <p style={ui.subtitle}>PDF veya TXT dosyası yükleyin (maks. 50 MB).</p>
+        <p style={ui.subtitle}>
+          PDF, TXT veya DOCX dosyası yükleyin (maks. 50 MB).
+        </p>
 
         {error && <div style={ui.error}>{error}</div>}
         {result && (
           <div style={ui.success}>
-            Dosya yüklendi: <strong>{result.filename}</strong>
+            Dosya alındı: <strong>{result.filename}</strong>
             <br />
             Doküman ID: {result.document_id} — Durum: {result.status}
+            <br />
+            İşleme arka planda sürüyor.{" "}
+            <Link href="/documents">Dokümanlarım</Link> sayfasından takip
+            edebilirsiniz.
           </div>
         )}
 
@@ -120,7 +126,7 @@ export default function UploadPage() {
             id="file"
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.txt"
+            accept=".pdf,.txt,.docx"
             style={ui.input}
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />

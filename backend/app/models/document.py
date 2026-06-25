@@ -15,6 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 if TYPE_CHECKING:
+    from app.models.chunk import Chunk
     from app.models.user import User
 
 
@@ -38,6 +39,10 @@ class Document(Base):
     )
 
     owner: Mapped["User"] = relationship(back_populates="documents")
+    chunks: Mapped[list["Chunk"]] = relationship(
+        back_populates="document",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:  # pragma: no cover - hata ayıklama yardımcısı
         return (

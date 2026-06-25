@@ -1,8 +1,9 @@
 """FastAPI uygulama giriş noktası.
 
 - CORS frontend için yapılandırılır.
-- Uygulama başlangıcında veritabanı tabloları oluşturulur ve ilk admin
-  kullanıcı (seed) eklenir.
+- Veritabanı şeması Alembic migration'ları ile yönetilir (bkz. `migrations/`).
+  Uygulamayı başlatmadan önce `alembic upgrade head` çalıştırılmalıdır.
+- Uygulama başlangıcında yalnızca ilk admin kullanıcı (seed) eklenir.
 - 1. Hafta router'ları: `auth`, `documents`.
 """
 
@@ -12,9 +13,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import models  # noqa: F401  -- ORM tablolarını Base.metadata'ya kaydeder
+from app import models  # noqa: F401  -- tüm ORM mapper'larını (User/Document/Chunk) kaydeder
 from app.config import settings
-from app.database import Base, engine
 from app.routers import auth, documents
 from app.seed import seed_admin_user
 
@@ -24,9 +24,11 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Uygulama yaşam döngüsü: başlangıçta tablo oluşturma + admin seed."""
-    logger.info("Veritabanı tabloları oluşturuluyor...")
-    Base.metadata.create_all(bind=engine)
+    """Uygulama yaşam döngüsü: ilk admin kullanıcıyı seed eder.
+
+    Şema oluşturma/güncelleme artık Alembic'in sorumluluğundadır; başlangıçta
+    `create_all` çağrılmaz. Tablolar yoksa `alembic upgrade head` çalıştırın.
+    """
     seed_admin_user()
     logger.info("Başlangıç hazır.")
     yield

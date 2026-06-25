@@ -77,3 +77,24 @@ def save_upload(content: bytes, original_filename: str, ext: str) -> SavedFile:
         original_filename=safe_original,
         file_path=str(target),
     )
+
+
+def delete_file(file_path: str) -> bool:
+    """`uploads/` içindeki bir dosyayı güvenli şekilde siler.
+
+    Yol her zaman `uploads/` altında olmalıdır (path traversal'a karşı). Dosya
+    zaten yoksa sessizce `False` döner; silinirse `True` döner.
+    """
+    if not file_path:
+        return False
+
+    target = Path(file_path).resolve()
+    upload_root = UPLOAD_PATH.resolve()
+    if upload_root != target and upload_root not in target.parents:
+        raise ValueError("Geçersiz dosya yolu.")
+
+    try:
+        target.unlink()
+        return True
+    except FileNotFoundError:
+        return False
