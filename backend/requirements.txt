@@ -8,7 +8,7 @@ email-validator
 SQLAlchemy
 psycopg[binary]
 alembic
-passlib[bcrypt]
+bcrypt
 python-jose[cryptography]
 httpx
 pypdf
