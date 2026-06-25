@@ -996,7 +996,7 @@ Yüklenen dokümanları API isteğini bloke etmeden arka planda işlemek, chunk'
 - Doküman durum sorgulama, listeleme ve silme endpoint'leri yazılır; **hepsi giriş yapmış kullanıcının `user_id` değeriyle filtrelenir.**
 - Sahiplik kontrolü eklenir: kullanıcı başka birinin dokümanına erişmeye çalışırsa `403`/`404` döner.
 - Frontend'de doküman listesi, durum göstergesi ve `ProtectedRoute` eklenir.
-- Zaman kalırsa DOCX desteği eklenir.
+- DOCX desteği eklenir.
 
 ### Kabul Kriterleri
 
