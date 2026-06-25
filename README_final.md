@@ -86,7 +86,7 @@ LocalDoc AI, dokümanları lokal ortamda işler ve lokal LLM kullanarak cevap ü
 |---|---|
 | Backend | FastAPI |
 | Frontend (web) | React veya Next.js |
-| Kimlik doğrulama | JWT (python-jose) + bcrypt (passlib) |
+| Kimlik doğrulama | JWT (python-jose) + bcrypt |
 | Vektör veritabanı | ChromaDB |
 | İlişkisel veritabanı | PostgreSQL |
 | Lokal LLM | LM Studio |
@@ -172,11 +172,13 @@ Sistem ilk kez çalıştırıldığında, `.env` içindeki `DEFAULT_ADMIN_EMAIL`
 
 ---
 
+## Kullanılan Teknolojiler
+
 | Katman | Teknoloji |
 |---|---|
 | Frontend (web) | React veya Next.js |
 | Backend | Python 3.14+, FastAPI |
-| Kimlik doğrulama | JWT (python-jose), passlib[bcrypt] |
+| Kimlik doğrulama | JWT (python-jose), bcrypt |
 | Async görev yönetimi | FastAPI BackgroundTasks |
 | Lokal AI | LM Studio |
 | Vektör veritabanı | ChromaDB |
@@ -228,7 +230,7 @@ Kimlik doğrulama için **stateless JWT** yaklaşımı seçilmiştir.
 
 - Sunucu tarafında oturum (session) tablosu tutulmaz; bu, FastAPI ile basit ve ölçeklenebilir bir çözümdür.
 - Kullanıcı giriş yaptığında imzalı bir `access_token` üretilir ve sonraki isteklerde `Authorization: Bearer <token>` başlığıyla gönderilir.
-- Şifreler **bcrypt** (passlib) ile hash'lenir; veritabanında hiçbir zaman düz metin saklanmaz.
+- Şifreler **bcrypt** ile hash'lenir; veritabanında hiçbir zaman düz metin saklanmaz.
 - Token doğrulama, korunan tüm endpoint'lerde paylaşılan bir `get_current_user` dependency'si ile yapılır. Bu, yetki kontrolünün tek bir noktada toplanmasını sağlar.
 
 ### Rol Modeli (RBAC)
@@ -258,7 +260,7 @@ Her doküman bir kullanıcıya aittir. İzolasyon iki katmanda sağlanır:
         ┌─────────────────────────────────────────┐
         │            FastAPI Backend               │
         │                                          │
-        │   Auth Middleware (JWT doğrulama)        │
+        │   Auth Dependency (JWT doğrulama)        │
         │   get_current_user / require_admin       │
         │                                          │
         │   ├── Auth Service (kayıt, giriş, rol)   │
@@ -322,11 +324,11 @@ Cevap + kaynak gösterimi
 ### 2. Doküman Yükleme
 
 1. Giriş yapmış kullanıcı PDF veya TXT dosyası yükler (token zorunludur).
-2. Backend dosya türünü, MIME type değerini ve dosya boyutunu kontrol eder.
+2. Backend dosya türünü, dosya imzasını (magic byte) ve dosya boyutunu kontrol eder.
 3. Dosya adı sanitize edilir ve `uploads/` klasörüne güvenli şekilde kaydedilir.
 4. PostgreSQL `documents` tablosuna, dokümanı yükleyen kullanıcının `user_id` değeriyle birlikte kayıt atılır.
-5. Doküman durumu `processing` yapılır.
-6. Kullanıcıya `202 Accepted` ile `document_id` döner.
+5. Doküman durumu `uploaded` yapılır.
+6. Kullanıcıya `201 Created` ile `document_id`, `filename` ve `status` döner.
 
 ### 3. Async Doküman İşleme
 
@@ -414,6 +416,7 @@ localdoc-ai/
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
+│   │   │   ├── _app.tsx
 │   │   │   ├── index.tsx
 │   │   │   ├── login.tsx
 │   │   │   ├── register.tsx
@@ -425,6 +428,10 @@ localdoc-ai/
 │   │   ├── context/
 │   │   │   └── AuthContext.tsx    # token + kullanıcı durumu
 │   │   │
+│   │   ├── lib/
+│   │   │   ├── api.ts             # apiFetch (token + hata yönetimi)
+│   │   │   └── ui.ts              # paylaşılan stil yardımcıları
+│   │   │
 │   │   └── components/
 │   │       ├── ProtectedRoute.tsx
 │   │       ├── FileUploader.tsx
@@ -434,7 +441,10 @@ localdoc-ai/
 │   │       ├── AdminPanel.tsx
 │   │       └── StatusBadge.tsx
 │   │
-│   ├── .env.local
+│   ├── next.config.js
+│   ├── tsconfig.json
+│   ├── next-env.d.ts
+│   ├── .env.example
 │   └── package.json
 │
 ├── evaluation/
@@ -615,12 +625,13 @@ curl -X POST http://localhost:8000/documents/upload \
   -F "file=@ornek.pdf"
 ```
 
-Örnek cevap:
+Örnek cevap (`201 Created`):
 
 ```json
 {
   "document_id": 1,
-  "status": "processing"
+  "filename": "ornek.pdf",
+  "status": "uploaded"
 }
 ```
 
@@ -829,7 +840,7 @@ Authorization: Bearer <admin_token>
 # Dosya yükleme
 UPLOAD_DIR=uploads
 MAX_FILE_SIZE_MB=50
-ALLOWED_EXTENSIONS=pdf,txt,docx
+ALLOWED_EXTENSIONS=pdf,txt
 
 # Veritabanı
 DATABASE_URL=postgresql+psycopg://localdoc:localdoc@localhost:5432/localdoc_ai
@@ -940,12 +951,12 @@ Backend ve frontend başlangıç yapısını kurmak, JWT tabanlı kimlik doğrul
 - `.env` ve `.env.example` hazırlanır.
 - PostgreSQL bağlantısı kurulur.
 - `users` ve `documents` tabloları oluşturulur.
-- Şifre hash'leme (bcrypt/passlib) ve JWT üretimi/doğrulama yardımcıları yazılır (`security.py`).
+- Şifre hash'leme (bcrypt) ve JWT üretimi/doğrulama yardımcıları yazılır (`security.py`).
 - `/auth/register`, `/auth/login` ve `/auth/me` endpoint'leri yazılır.
 - `get_current_user` dependency'si yazılır.
 - `.env` değerlerinden ilk admin kullanıcı (seed) oluşturulur.
 - Korumalı PDF ve TXT yükleme endpoint'i yazılır; doküman yükleyen kullanıcının `user_id` değeriyle ilişkilendirilir.
-- Dosya uzantısı, MIME type ve dosya boyutu kontrol edilir.
+- Dosya uzantısı, dosya imzası (magic byte) ve dosya boyutu kontrol edilir.
 - PDF ve TXT için metin çıkarma servisi hazırlanır.
 - Frontend'de giriş ve kayıt ekranları ile `AuthContext` (token saklama) yapılır.
 - Basit dosya yükleme ekranı yapılır.
@@ -1336,7 +1347,7 @@ Dosya yükleyen ve çok kullanıcılı sistemlerde minimum güvenlik kontrolleri
 ### Zorunlu Dosya Kontrolleri
 
 - Dosya uzantısı kontrol edilmelidir.
-- MIME type kontrol edilmelidir.
+- Dosya imzası (magic byte) ile içerik doğrulaması yapılmalıdır (istemci kaynaklı MIME başlığı taklit edilebildiği için tercih edilmez).
 - Maksimum dosya boyutu sınırı uygulanmalıdır.
 - Dosya adı sanitize edilmelidir.
 - Path traversal engellenmelidir.
@@ -1349,7 +1360,7 @@ Dosya yükleyen ve çok kullanıcılı sistemlerde minimum güvenlik kontrolleri
 
 | Durum | Mesaj |
 |---|---|
-| Desteklenmeyen dosya türü | Yalnızca PDF, TXT ve DOCX dosyaları desteklenmektedir. |
+| Desteklenmeyen dosya türü | Yalnızca PDF ve TXT dosyaları desteklenmektedir. |
 | Dosya çok büyük | Maksimum dosya boyutu 50 MB'tır. |
 | Boş dosya | Yüklenen dosya boş görünüyor. |
 | Bozuk veya şifreli PDF | Bu PDF okunamadı. Şifreli veya bozuk olabilir. |
