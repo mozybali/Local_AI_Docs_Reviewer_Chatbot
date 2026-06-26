@@ -79,6 +79,12 @@ def search_chunks(
         top_k=k,
         document_ids=list(ready_docs),
     )
+    # Skor eşiği altındaki (alakasız) eşleşmeleri ele. top-k her zaman "en yakın"
+    # k sonucu döndürür; soru dokümanlarla alakasızsa bile en yakınları döner.
+    # Bunlar bağlama girerse LLM uydurmaya zorlanır. Eşik altını eleyerek, hiçbir
+    # yeterince benzer eşleşme yoksa sonucu boşaltırız; böylece llm_service boş
+    # bağlamda deterministik NO_ANSWER döner (prompt kuralına bağımlı kalmadan).
+    matches = [m for m in matches if m.score >= settings.RETRIEVAL_MIN_SCORE]
     if not matches:
         return []
 

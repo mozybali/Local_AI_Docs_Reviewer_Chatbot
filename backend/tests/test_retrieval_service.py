@@ -75,6 +75,37 @@ def test_resolves_filenames_and_enriches_results(db_session, monkeypatch):
     assert results[1].document_id == 2
 
 
+def test_low_score_matches_are_filtered_out(db_session, monkeypatch):
+    # Eşik altındaki (alakasız) eşleşmeler bağlama alınmamalı. Eşik 0.5 iken
+    # 0.80 kalır, 0.30 elenir.
+    monkeypatch.setattr(retrieval_service.settings, "RETRIEVAL_MIN_SCORE", 0.5)
+    fake_matches = [
+        vector_store.VectorMatch("doc1_chunk0", "alakali metin", 0.80,
+                                 document_id=1, chunk_index=0, page_number=4),
+        vector_store.VectorMatch("doc2_chunk0", "alakasiz metin", 0.30,
+                                 document_id=2, chunk_index=3, page_number=7),
+    ]
+    monkeypatch.setattr(vector_store, "search", lambda **kwargs: fake_matches)
+
+    results = retrieval_service.search_chunks(db_session, 1, "soru")
+    assert [r.document_id for r in results] == [1]
+
+
+def test_all_below_threshold_yields_empty(db_session, monkeypatch):
+    # Negatif soru: en yakın eşleşmeler bile eşik altındaysa sonuç boş dönmeli.
+    # Böylece llm_service deterministik olarak NO_ANSWER üretir (LLM çağrılmaz).
+    monkeypatch.setattr(retrieval_service.settings, "RETRIEVAL_MIN_SCORE", 0.5)
+    fake_matches = [
+        vector_store.VectorMatch("doc1_chunk0", "alakasiz", 0.10,
+                                 document_id=1, chunk_index=0, page_number=4),
+        vector_store.VectorMatch("doc2_chunk0", "alakasiz", 0.05,
+                                 document_id=2, chunk_index=3, page_number=7),
+    ]
+    monkeypatch.setattr(vector_store, "search", lambda **kwargs: fake_matches)
+
+    assert retrieval_service.search_chunks(db_session, 1, "alakasiz soru") == []
+
+
 def test_orphan_document_id_is_filtered_out(db_session, monkeypatch):
     # BACKSTOP testi: Pre-filter sayesinde Chroma normalde scope dışı bir
     # document_id döndürmez. Burada fake search filtreyi yok sayıp PG'de karşılığı

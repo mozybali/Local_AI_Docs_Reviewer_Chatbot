@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "lmstudio"
     LLM_API_URL: str = "http://localhost:1234/v1"
     LLM_MODEL_NAME: str = "local-model"
+    # LLM üretim parametreleri (opsiyonel; .env'de yoksa varsayılanlar kullanılır).
+    # Düşük sıcaklık, bağlama sadık ve daha az "uyduran" cevaplar üretir.
+    LLM_TEMPERATURE: float = 0.2
+    LLM_MAX_TOKENS: int = 130000
+    # Lokal model yavaş olabileceğinden istek zaman aşımı geniş tutulur (saniye).
+    LLM_TIMEOUT: int = 500
 
     # Vektör veritabanı (Hafta 3)
     VECTOR_STORE: str = "chromadb"
@@ -51,6 +57,13 @@ class Settings(BaseSettings):
     CHUNK_SIZE: int = 512
     CHUNK_OVERLAP: int = 50
     TOP_K: int = 5
+    # Retrieval skor eşiği (Hafta 4): kosinüs benzerlik skoru (1.0 = en benzer)
+    # bu değerin altında kalan eşleşmeler bağlama alınmaz. Böylece soru
+    # dokümanlarla alakasızken (negatif soru) zayıf/alakasız chunk'lar LLM'e
+    # gitmez ve cevap deterministik olarak NO_ANSWER'a döner (hallucination
+    # önlemi). Varsayılan 0.0: yalnızca dik/zıt (skor < 0) alakasız eşleşmeleri
+    # eler; gerçek değerlendirmeyle (evaluation/) daha yükseğe çekilebilir.
+    RETRIEVAL_MIN_SCORE: float = 0.0
 
     # İstemciler (CORS)
     FRONTEND_ORIGIN: str = "http://localhost:3000"

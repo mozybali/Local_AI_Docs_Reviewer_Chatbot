@@ -120,22 +120,40 @@ function DocumentsContent() {
           }}
         >
           <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Dokümanlarım</h1>
-          <Link href="/upload">
-            <button
-              style={{
-                background: "#2563eb",
-                color: "#fff",
-                border: "none",
-                borderRadius: 8,
-                padding: "0.5rem 1rem",
-                cursor: "pointer",
-                fontWeight: 600,
-                fontSize: "0.85rem",
-              }}
-            >
-              + Yükle
-            </button>
-          </Link>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Link href="/chat">
+              <button
+                style={{
+                  background: "transparent",
+                  color: "#60a5fa",
+                  border: "1px solid #334155",
+                  borderRadius: 8,
+                  padding: "0.5rem 1rem",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                }}
+              >
+                Sohbet
+              </button>
+            </Link>
+            <Link href="/upload">
+              <button
+                style={{
+                  background: "#2563eb",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "0.5rem 1rem",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                }}
+              >
+                + Yükle
+              </button>
+            </Link>
+          </div>
         </div>
 
         {error && (

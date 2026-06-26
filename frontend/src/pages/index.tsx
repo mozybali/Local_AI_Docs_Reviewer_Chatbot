@@ -21,8 +21,21 @@ export default function HomePage() {
               Hoş geldin, <strong>{user?.email}</strong>
               {user?.role === "admin" ? " (admin)" : ""}.
             </p>
+            <Link href="/chat">
+              <button style={ui.button}>Soru Sor (Sohbet)</button>
+            </Link>
             <Link href="/upload">
-              <button style={ui.button}>Doküman Yükle</button>
+              <button
+                style={{
+                  ...ui.button,
+                  background: "transparent",
+                  color: "#60a5fa",
+                  border: "1px solid #334155",
+                  marginTop: "0.75rem",
+                }}
+              >
+                Doküman Yükle
+              </button>
             </Link>
             <Link href="/documents">
               <button

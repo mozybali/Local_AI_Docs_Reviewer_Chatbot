@@ -20,6 +20,25 @@ class TextExtractionError(Exception):
     """Metin çıkarma sırasında oluşan hata."""
 
 
+# PostgreSQL `text`/`varchar` alanları NUL (0x00) baytını saklayamaz. Bazı
+# PDF'ler (ör. e-imzalı Resmî Gazete belgeleri) bazı glifleri 0x00'a eşler; bu
+# da chunk_text PG'ye yazılırken `DataError`'a yol açar. Bu yüzden NUL'u ve diğer
+# C0 kontrol karakterlerini (yaygın boşluklar \t \n \r hariç) çıkarımda temizle.
+# DEL (0x7F) de güvenlik için kaldırılır.
+_CONTROL_CHARS_TABLE = {
+    codepoint: None
+    for codepoint in (*range(0x20), 0x7F)
+    if codepoint not in (0x09, 0x0A, 0x0D)
+}
+
+
+def _sanitize_text(text: str) -> str:
+    """Saklanamayan kontrol karakterlerini (NUL dahil) metinden temizler."""
+    if not text:
+        return text
+    return text.translate(_CONTROL_CHARS_TABLE)
+
+
 @dataclass(frozen=True)
 class ExtractedPage:
     """Tek bir sayfanın çıkarılmış metni."""
@@ -35,12 +54,20 @@ def extract_pages(file_path: str, file_type: str) -> list[ExtractedPage]:
     """
     ext = file_type.strip().lower().lstrip(".")
     if ext == "pdf":
-        return _extract_pdf(file_path)
-    if ext == "txt":
-        return _extract_txt(file_path)
-    if ext == "docx":
-        return _extract_docx(file_path)
-    raise TextExtractionError(f"Desteklenmeyen dosya tipi: {ext}")
+        pages = _extract_pdf(file_path)
+    elif ext == "txt":
+        pages = _extract_txt(file_path)
+    elif ext == "docx":
+        pages = _extract_docx(file_path)
+    else:
+        raise TextExtractionError(f"Desteklenmeyen dosya tipi: {ext}")
+
+    # Tüm çıkarıcılar için tek noktada sanitizasyon: PG'nin reddettiği NUL ve
+    # diğer kontrol karakterlerini temizle (yoksa commit DataError verir).
+    return [
+        ExtractedPage(page_number=p.page_number, text=_sanitize_text(p.text))
+        for p in pages
+    ]
 
 
 def extract_text(file_path: str, file_type: str) -> str:

@@ -19,5 +19,17 @@
     "expected_answer": "Dokümanda belirtilen süre kadar.",
     "expected_source_doc": "personel_yonetmeligi.pdf",
     "expected_page": 9
+  },
+  {
+    "id": 100,
+    "question": "Mars'a ilk insanlı görev hangi yıl planlanıyor?",
+    "comment": "NEGATİF soru: cevabı dokümanlarda yok. Doğru davranış: eşik sonrası retrieval boş dönmeli (NO_ANSWER). expected_source_doc null bırakılır.",
+    "expected_source_doc": null
+  },
+  {
+    "id": 101,
+    "question": "Şirketin kripto para yatırım stratejisi nedir?",
+    "comment": "NEGATİF soru. Açıkça işaretlemek için negative:true de kullanılabilir.",
+    "negative": true
   }
 ]

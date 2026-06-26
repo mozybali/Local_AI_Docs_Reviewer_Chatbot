@@ -4,7 +4,8 @@
 - Veritabanı şeması Alembic migration'ları ile yönetilir (bkz. `migrations/`).
   Uygulamayı başlatmadan önce `alembic upgrade head` çalıştırılmalıdır.
 - Uygulama başlangıcında yalnızca ilk admin kullanıcı (seed) eklenir.
-- Router'lar: `auth`, `documents` (Hafta 1-2), `search` (Hafta 3).
+- Router'lar: `auth`, `documents` (Hafta 1-2), `search` (Hafta 3),
+  `chat` (Hafta 4).
 """
 
 import logging
@@ -15,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import models  # noqa: F401  -- tüm ORM mapper'larını (User/Document/Chunk) kaydeder
 from app.config import settings
-from app.routers import auth, documents, search
+from app.routers import auth, chat, documents, search
 from app.seed import seed_admin_user
 
 logging.basicConfig(level=logging.INFO)
@@ -52,6 +53,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(documents.router)
 app.include_router(search.router)
+app.include_router(chat.router)
 
 
 @app.get("/health", tags=["system"])
