@@ -2,8 +2,8 @@
 
 Async işleme sırasında her doküman, ~512 token boyutunda ve 50 token overlap'li
 parçalara (chunk) bölünür. Her chunk; kaynak gösterimi için sayfa numarasını ve
-doküman içindeki sırasını (`chunk_index`) saklar. `vector_id` alanı Hafta 3'te
-ChromaDB vektörüyle ilişkilendirilecektir (şimdilik `NULL`).
+doküman içindeki sırasını (`chunk_index`) saklar. `vector_id` alanı (Hafta 3)
+ChromaDB vektörüyle ilişkilendirilir (ör. `doc{document_id}_chunk{chunk_index}`).
 
 Foreign key `ON DELETE CASCADE` ile tanımlıdır; ayrıca `Document.chunks`
 ilişkisindeki `cascade="all, delete-orphan"` sayesinde doküman ORM üzerinden

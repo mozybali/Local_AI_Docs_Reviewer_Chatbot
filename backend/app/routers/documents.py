@@ -31,7 +31,7 @@ from app.database import get_db
 from app.models.chunk import Chunk
 from app.models.document import Document
 from app.models.user import User
-from app.services import file_service
+from app.services import file_service, vector_store
 from app.services.document_processor import process_document
 from app.utils.dependencies import get_current_user
 from app.utils.file_validation import FileValidationError, validate_upload
@@ -190,12 +190,23 @@ def delete_document(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> None:
-    """Dokümanı siler: chunk kayıtları (cascade) ve fiziksel dosya dahil.
+    """Dokümanı siler: chunk kayıtları (cascade), ChromaDB vektörleri ve
+    fiziksel dosya dahil.
 
-    ChromaDB vektör silme işlemi Hafta 3'te eklenecektir.
+    Silme sonrası bu dokümandan artık arama sonucu dönmemelidir.
     """
     document = _get_owned_document(db, document_id, current_user)
     file_path = document.file_path
+
+    # ChromaDB vektörlerini sil (DB silmeden önce; başarısız olursa doküman
+    # silinmez ve kullanıcı tekrar deneyebilir).
+    try:
+        vector_store.delete_by_document(document.id)
+    except vector_store.VectorStoreError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Vektör veritabanına ulaşılamadı. Doküman silinemedi.",
+        ) from exc
 
     # ORM silme: Document.chunks ilişkisindeki cascade ile chunk'lar da silinir.
     db.delete(document)
