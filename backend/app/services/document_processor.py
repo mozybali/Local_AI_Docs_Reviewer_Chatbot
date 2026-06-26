@@ -9,11 +9,15 @@ Pipeline:
 2. Dosyadan metin sayfa sayfa çıkarılır.
 3. Metin chunk'lara bölünür (512 token / 50 overlap).
 4. Her chunk için embedding üretilir (Hafta 3).
-5. Eski chunk/vektörler temizlenip yeni chunk'lar PostgreSQL'e, vektörler
-   metadata ile (`user_id`, `document_id`, `page`, `chunk_index`) ChromaDB'ye
-   yazılır. Her chunk'ın `vector_id` alanı ilgili ChromaDB vektörüyle
-   ilişkilendirilir.
-6. Başarılıysa durum `ready`, hatada `error` (+ `error_msg`) yapılır.
+5. Önce PostgreSQL: eski chunk'lar silinip yeni chunk'lar yazılır ve COMMIT
+   edilir (PostgreSQL tek doğruluk kaynağıdır). Her chunk'ın `vector_id` alanı
+   ilgili ChromaDB vektörüyle deterministik olarak ilişkilendirilir.
+6. Sonra ChromaDB: eski vektörler silinip yeni vektörler metadata ile
+   (`user_id`, `document_id`, `page`, `chunk_index`) yazılır. `add_vectors`
+   upsert olduğu için bu adım idempotenttir/yeniden çalıştırılabilir.
+7. Doküman durumu YALNIZCA her iki depo da tutarlıyken `ready` yapılır;
+   ChromaDB adımı başarısız olursa durum `error` (+ `error_msg`) kalır ve
+   yeniden işlemede (veya `scripts/reindex.py` ile) düzelir.
 
 Önemli: Background task, request-scoped `get_db` oturumunu kullanamaz (yanıt
 gönderildikten sonra kapanır). Bu yüzden burada kendi `SessionLocal` oturumu
@@ -68,11 +72,6 @@ def process_document(document_id: int) -> None:
             # Her chunk için embedding üret (toplu/batch).
             embeddings = embedding_service.embed_texts([c.text for c in chunks])
 
-            # Yeniden işlemede mükerrer oluşmaması için eski kayıtları temizle:
-            # önce PostgreSQL chunk'ları, sonra ChromaDB vektörleri.
-            db.query(Chunk).filter(Chunk.document_id == document.id).delete()
-            vector_store.delete_by_document(document.id)
-
             # Chunk satırlarını ve ChromaDB vektör kayıtlarını birlikte hazırla.
             chunk_rows: list[Chunk] = []
             records: list[vector_store.VectorRecord] = []
@@ -99,10 +98,24 @@ def process_document(document_id: int) -> None:
                     )
                 )
 
+            # İki depoya transactional yazamadığımız için tutarlılığı, sıra +
+            # idempotency ile kuruyoruz (PostgreSQL = tek doğruluk kaynağı):
+            #
+            # 1) Önce PostgreSQL: eski chunk'ları sil, yenilerini ekle, COMMIT.
+            #    Bu noktada doküman hâlâ "processing"tir.
+            db.query(Chunk).filter(Chunk.document_id == document.id).delete()
             db.add_all(chunk_rows)
-            # Vektörleri ChromaDB'ye yaz; başarısız olursa DB commit edilmez.
+            db.commit()
+
+            # 2) Sonra ChromaDB: eski vektörleri sil, yenilerini yaz. `vector_id`
+            #    deterministik ve `add_vectors` upsert olduğu için bu adım
+            #    yeniden çalıştırılabilir (idempotent). Bu adım patlarsa aşağıdaki
+            #    `VectorStoreError` yakalanır ve doküman "error" yapılır; yani
+            #    ChromaDB başarısızken doküman ASLA "ready" olmaz.
+            vector_store.delete_by_document(document.id)
             vector_store.add_vectors(records)
 
+            # 3) Her iki depo da tutarlı: ancak şimdi "ready".
             document.status = "ready"
             document.error_msg = None
             db.commit()

@@ -4,10 +4,14 @@ Kullanıcı sorusunu embedding'e çevirir, ChromaDB üzerinde kullanıcının
 `user_id` değerine göre filtrelenmiş top-k anlamsal arama yapar ve sonuçları
 kaynak gösterimi için zenginleştirir (doküman adı, sayfa, skor, chunk index).
 
-İzolasyon iki kat güvence altındadır:
+İzolasyon ve tutarlılık güvence altındadır:
 1. ChromaDB sorgusu her zaman `user_id` ile filtrelenir (vektör tarafında).
 2. Doküman adları yalnızca kullanıcının PostgreSQL'deki kendi dokümanlarından
    çözülür; başka kullanıcıya ait bir `document_id` sonuç olarak görünmez.
+3. Yalnızca `status == "ready"` dokümanlar aramaya girer. Böylece silinmiş
+   dokümanların yetim vektörleri ya da yeniden işleme yarıda kalmışken (PG
+   commit edilmiş ama ChromaDB silme/yazma adımı patlamış) `error` durumda
+   kalan dokümanların eski/tutarsız vektörleri sonuçlara karışmaz.
 """
 
 from __future__ import annotations
@@ -57,10 +61,15 @@ def search_chunks(
 
     k = top_k if top_k is not None else settings.TOP_K
 
-    # İstenen doküman ID'lerini kullanıcının sahip olduklarıyla sınırla.
-    owned_ids = _owned_document_ids(db, user_id, document_ids)
-    if document_ids and not owned_ids:
-        # Kullanıcı yalnızca sahibi olmadığı doküman(lar) istedi: boş sonuç.
+    # Aramayı baştan kullanıcının yalnızca `ready` dokümanlarıyla sınırla. Bu tek
+    # PG sorgusu iki işi birden görür:
+    #   - Chroma araması için kapsam (anahtarlar): eski/yetim/yarım vektörler hiç
+    #     dönmez ve top-k'nın tamamı geçerli dokümanlardan gelir.
+    #   - Sonuç zenginleştirmede {id: orijinal_dosya_adı} eşlemesi (ek sorgu yok).
+    ready_docs = _ready_documents(db, user_id, document_ids)
+    if not ready_docs:
+        # Aranacak `ready` doküman yok (hiç yok ya da istenenler sahip değil/ready
+        # değil): embedding üretmeden ve Chroma'ya gitmeden boş dön.
         return []
 
     query_embedding = embedding_service.embed_query(question)
@@ -68,55 +77,62 @@ def search_chunks(
         query_embedding=query_embedding,
         user_id=user_id,
         top_k=k,
-        document_ids=owned_ids or None,
+        document_ids=list(ready_docs),
     )
     if not matches:
         return []
 
-    # Sonuçlardaki dokümanların orijinal adlarını tek sorguda çöz.
-    filenames = _document_filenames(
-        db, user_id, [m.document_id for m in matches]
-    )
-
-    return [
-        RetrievedChunk(
-            text=match.text,
-            score=match.score,
-            document_id=match.document_id,
-            document=filenames.get(match.document_id, "(bilinmeyen doküman)"),
-            page=match.page_number,
-            chunk_index=match.chunk_index,
+    results: list[RetrievedChunk] = []
+    for match in matches:
+        document_name = ready_docs.get(match.document_id)
+        if document_name is None:
+            # Pre-filtreye rağmen kalan tutarsızlık için backstop. Normalde
+            # buraya düşülmez; ancak sorgu ile sonuç arasında doküman
+            # silinmiş/değişmiş olabilir (yarış) ya da metadata kaymış olabilir.
+            # Tek doğruluk kaynağı PostgreSQL olduğundan bu sonuçları eleriz.
+            logger.warning(
+                "Vektör elendi (PG'de ready doküman yok): document_id=%s "
+                "vector_id=%s user_id=%s",
+                match.document_id,
+                match.vector_id,
+                user_id,
+            )
+            continue
+        results.append(
+            RetrievedChunk(
+                text=match.text,
+                score=match.score,
+                document_id=match.document_id,
+                document=document_name,
+                page=match.page_number,
+                chunk_index=match.chunk_index,
+            )
         )
-        for match in matches
-    ]
+
+    return results
 
 
-def _owned_document_ids(
+def _ready_documents(
     db: Session, user_id: int, document_ids: list[int] | None
-) -> list[int]:
-    """İstenen doküman ID'lerinden kullanıcıya ait olanları döner."""
-    if not document_ids:
-        return []
-    rows = db.scalars(
-        select(Document.id).where(
-            Document.user_id == user_id,
-            Document.id.in_(document_ids),
-        )
-    ).all()
-    return list(rows)
-
-
-def _document_filenames(
-    db: Session, user_id: int, document_ids: list[int]
 ) -> dict[int, str]:
-    """Doküman ID -> orijinal dosya adı eşlemesini (kullanıcı bazlı) döner."""
-    unique_ids = list({doc_id for doc_id in document_ids})
-    if not unique_ids:
-        return {}
-    rows = db.execute(
-        select(Document.id, Document.original_filename).where(
-            Document.user_id == user_id,
-            Document.id.in_(unique_ids),
-        )
-    ).all()
+    """Kullanıcının `ready` dokümanlarını {id: orijinal_dosya_adı} döner.
+
+    `document_ids` verilirse yalnızca o ID'lerle kesişim alınır (sahiplik + ready
+    süzgeci birlikte uygulanır). `None` ise kullanıcının tüm `ready` dokümanları
+    döner.
+
+    Dönen sözlük hem ChromaDB aramasının kapsamını (anahtarlar) hem de sonuç
+    zenginleştirmede dosya adı eşlemesini sağladığı için tek PG sorgusu yeterlidir.
+    `status == "ready"` koşulu, yalnızca her iki depoda (PostgreSQL + ChromaDB)
+    tutarlı şekilde işlenmiş dokümanların aramaya girmesini garanti eder;
+    `processing`/`error` durumundaki bir dokümanın Chroma'da kalmış eski/yarım
+    vektörleri sonuçlara karışamaz.
+    """
+    stmt = select(Document.id, Document.original_filename).where(
+        Document.user_id == user_id,
+        Document.status == "ready",
+    )
+    if document_ids:
+        stmt = stmt.where(Document.id.in_(set(document_ids)))
+    rows = db.execute(stmt).all()
     return {doc_id: filename for doc_id, filename in rows}

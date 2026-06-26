@@ -75,6 +75,70 @@ def test_resolves_filenames_and_enriches_results(db_session, monkeypatch):
     assert results[1].document_id == 2
 
 
+def test_orphan_document_id_is_filtered_out(db_session, monkeypatch):
+    # BACKSTOP testi: Pre-filter sayesinde Chroma normalde scope dışı bir
+    # document_id döndürmez. Burada fake search filtreyi yok sayıp PG'de karşılığı
+    # olmayan bir document_id (yetim vektör) döndürerek -- ör. silmede DB silinip
+    # Chroma temizliği yarıda kaldığında oluşan drift -- enrichment'taki
+    # `ready_docs.get() is None` yedeğinin yine de elediğini doğrular.
+    fake_matches = [
+        vector_store.VectorMatch("doc999_chunk0", "yetim metin", 0.95,
+                                 document_id=999, chunk_index=0, page_number=1),
+        vector_store.VectorMatch("doc1_chunk0", "gercek metin", 0.80,
+                                 document_id=1, chunk_index=0, page_number=4),
+    ]
+    monkeypatch.setattr(vector_store, "search", lambda **kwargs: fake_matches)
+
+    results = retrieval_service.search_chunks(db_session, user_id=1, question="soru")
+    # Yetim (999) elendi; yalnızca PG'de karşılığı olan doc1 kaldı.
+    assert [r.document_id for r in results] == [1]
+    assert results[0].document == "izin.pdf"
+
+
+def test_non_ready_document_vectors_are_filtered_out(db_session, monkeypatch):
+    # Yeniden işlemede PG commit edildikten sonra ChromaDB silme/yazma adımı
+    # patlarsa doküman "error" yapılır ama eski vektörler Chroma'da kalabilir.
+    # Bu vektörler PG'de hâlâ var olan (ama "error") bir dokümana işaret eder;
+    # retrieval bunları status filtresiyle elemelidir.
+    doc = db_session.get(Document, 2)
+    doc.status = "error"
+    db_session.commit()
+
+    fake_matches = [
+        vector_store.VectorMatch("doc2_chunk0", "eski mesai metni", 0.95,
+                                 document_id=2, chunk_index=0, page_number=7),
+        vector_store.VectorMatch("doc1_chunk0", "gercek izin metni", 0.80,
+                                 document_id=1, chunk_index=0, page_number=4),
+    ]
+    monkeypatch.setattr(vector_store, "search", lambda **kwargs: fake_matches)
+
+    results = retrieval_service.search_chunks(db_session, user_id=1, question="soru")
+    # "error" durumdaki doc2 elendi; yalnızca "ready" olan doc1 kaldı.
+    assert [r.document_id for r in results] == [1]
+    assert results[0].document == "izin.pdf"
+
+
+def test_non_ready_document_ids_yield_empty(db_session, monkeypatch):
+    # Kullanıcı yalnızca "ready" olmayan kendi dokümanını isterse vektör araması
+    # hiç yapılmamalı ve sonuç boş olmalı (ready süzgeci scope'u da daraltır).
+    doc = db_session.get(Document, 1)
+    doc.status = "processing"
+    db_session.commit()
+
+    called = {"v": False}
+
+    def fake_search(**kwargs):
+        called["v"] = True
+        return []
+
+    monkeypatch.setattr(vector_store, "search", fake_search)
+    results = retrieval_service.search_chunks(
+        db_session, user_id=1, question="soru", document_ids=[1]
+    )
+    assert results == []
+    assert called["v"] is False
+
+
 def test_search_passes_user_id_to_vector_store(db_session, monkeypatch):
     seen = {}
 
@@ -116,4 +180,24 @@ def test_owned_subset_of_document_ids_is_used(db_session, monkeypatch):
     retrieval_service.search_chunks(
         db_session, user_id=1, question="soru", document_ids=[1, 3]
     )
+    assert seen["document_ids"] == [1]
+
+
+def test_none_document_ids_scope_limited_to_ready_docs(db_session, monkeypatch):
+    # PRE-FILTER testi (document_ids=None / "tüm dokümanlarda ara" yolu).
+    # Orijinal hatanın yaşadığı yol burasıydı; bu yüzden sonuç elemesine GÜVENMEDEN
+    # Chroma'ya gönderilen scope'u argüman düzeyinde doğruluyoruz. doc2'yi "error"
+    # yaparsak ready scope'tan düşmeli; doc3 zaten başka kullanıcının.
+    db_session.get(Document, 2).status = "error"
+    db_session.commit()
+
+    seen = {}
+
+    def fake_search(**kwargs):
+        seen.update(kwargs)
+        return []
+
+    monkeypatch.setattr(vector_store, "search", fake_search)
+    retrieval_service.search_chunks(db_session, user_id=1, question="soru")
+    # user1'in tek ready dokümanı doc1; Chroma sorgusu yalnızca onunla sınırlanmalı.
     assert seen["document_ids"] == [1]

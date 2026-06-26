@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "question": "Yıllık izin kaç gün önce talep edilmelidir?",
+    "expected_answer": "En az 5 iş günü önce",
+    "expected_source_doc": "personel_yonetmeligi.pdf",
+    "expected_page": 4
+  },
+  {
+    "id": 2,
+    "question": "Fazla mesai ücreti nasıl hesaplanır?",
+    "expected_answer": "Dokümanda belirtilen fazla mesai katsayısına göre hesaplanır.",
+    "expected_source_doc": "personel_yonetmeligi.pdf",
+    "expected_page": 7
+  },
+  {
+    "id": 3,
+    "question": "Doğum izni süresi ne kadardır?",
+    "expected_answer": "Dokümanda belirtilen süre kadar.",
+    "expected_source_doc": "personel_yonetmeligi.pdf",
+    "expected_page": 9
+  }
+]

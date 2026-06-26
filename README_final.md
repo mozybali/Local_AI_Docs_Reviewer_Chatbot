@@ -1034,6 +1034,9 @@ Doküman chunk'larını embedding vektörlerine dönüştürmek, ChromaDB'ye kul
 - `/search` endpoint'i yazılır (korumalı ve kullanıcı bazlı).
 - Arama sonuçlarında skor, doküman adı, sayfa numarası ve chunk index gösterilir.
 - Manuel retrieval testleri yapılır.
+- PostgreSQL ↔ ChromaDB tutarlılık stratejisi uygulanır (sıralı yazma/silme, idempotent upsert, yetim vektör filtresi).
+- Recall@5 / MRR değerlendirme aracı (`evaluation/run_eval.py`) ve tutarlılık/onarım komutu (`backend/scripts/reindex.py`) eklenir.
+- `/search` için HTTP/auth testi ve upload → işleme → vektör yazımı → arama uçtan uca entegrasyon testi yazılır.
 
 ### Kabul Kriterleri
 
@@ -1045,11 +1048,49 @@ Doküman chunk'larını embedding vektörlerine dönüştürmek, ChromaDB'ye kul
 - Bir kullanıcının araması asla başka bir kullanıcının chunk'ını döndürmemelidir.
 - Doküman silindiğinde ChromaDB içindeki ilgili vektörler de silinmelidir.
 
+### PostgreSQL ↔ ChromaDB Tutarlılık Stratejisi
+
+İki ayrı veri deposuna (PostgreSQL + ChromaDB) tek bir transaction içinde yazmak
+mümkün olmadığından, tutarlılık aşağıdaki ilkelerle sağlanır:
+
+- **PostgreSQL tek doğruluk kaynağıdır (source of truth).** ChromaDB, PG'deki
+  chunk'lardan yeniden üretilebilen türetilmiş bir depodur.
+- **Yazma sırası:** Doküman işlenirken önce PostgreSQL chunk'ları yazılıp commit
+  edilir, ardından ChromaDB vektörleri yazılır. Doküman durumu YALNIZCA her iki
+  adım da başarılıysa `ready` olur; ChromaDB adımı başarısız olursa durum `error`
+  kalır (asla `ready` olmaz).
+- **Silme sırası:** Önce PostgreSQL kaydı (cascade ile chunk'lar) silinip commit
+  edilir, sonra ChromaDB vektörleri silinir. Böylece commit yarıda kalsa bile
+  veri kaybı/çelişki oluşmaz.
+- **Idempotency:** `vector_id` deterministiktir (`doc{document_id}_chunk{index}`)
+  ve ChromaDB yazımı upsert ile yapılır; bu sayede yeniden işleme ve onarım
+  yeniden çalıştırılabilir, mükerrer vektör oluşturmaz.
+- **Yetim vektör filtresi:** Retrieval, PostgreSQL'de karşılığı olmayan bir
+  `document_id` döndüren sonuçları eler. Böylece silme sırasında ChromaDB
+  temizliği yarıda kalsa bile silinmiş bir dokümandan arama sonucu dönmez.
+
+### Retrieval Değerlendirme ve Bakım Araçları
+
+- **Değerlendirme (`evaluation/run_eval.py`):** `evaluation/ground_truth.json`
+  içindeki soruları gerçek retrieval hattından geçirip **Recall@5** ve **MRR**
+  hesaplar; sonucu `evaluation/results.json`'a yazar. Böylece "10 sorudan en az
+  7'sinde doğru kaynak ilk 5 sonuç içinde" (Recall@5 ≥ %70) kabul kriteri
+  ölçülebilir hâle gelir. Negatif soru / hallucination ölçümü bu aracın kapsamı
+  dışındadır (Hafta 4/7). Ayrıntılı kullanım: `evaluation/README.md`.
+- **Tutarlılık/onarım (`backend/scripts/reindex.py`):** PostgreSQL chunk sayısı
+  ile ChromaDB vektör sayısını karşılaştırarak drift'i ve yetim vektörleri
+  raporlar (`--check`); tutarsız veya `error` durumundaki dokümanları yeniden
+  işler ve yetim vektörleri temizler (`--fix`); ya da tek bir dokümanı yeniden
+  indeksler (`--document-id N`).
+
 ### Hafta Sonu Çıktısı
 
 - Çalışan embedding pipeline'ı
 - Kullanıcı izolasyonlu ChromaDB vektör kaydı
 - Kullanıcı bazlı semantik arama endpoint'i
+- PostgreSQL ↔ ChromaDB tutarlılık stratejisi (sıralı yazma/silme, idempotent upsert, yetim vektör filtresi)
+- Recall@5 / MRR değerlendirme aracı ve tutarlılık/onarım (reindex) komutu
+- `/search` HTTP/auth testleri ve uçtan uca işleme→arama entegrasyon testi
 
 ---
 

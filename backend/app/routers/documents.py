@@ -12,6 +12,7 @@ filtrelenir; başka kullanıcının dokümanına erişim `404` döner (varlığ�
 sızdırmamak için).
 """
 
+import logging
 from datetime import datetime
 
 from fastapi import (
@@ -35,6 +36,8 @@ from app.services import file_service, vector_store
 from app.services.document_processor import process_document
 from app.utils.dependencies import get_current_user
 from app.utils.file_validation import FileValidationError, validate_upload
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -194,25 +197,36 @@ def delete_document(
     fiziksel dosya dahil.
 
     Silme sonrası bu dokümandan artık arama sonucu dönmemelidir.
+
+    Sıra: PostgreSQL tek doğruluk kaynağı olduğu için önce DB kaydı (cascade ile
+    chunk'lar) silinip COMMIT edilir; ardından ChromaDB vektörleri ve fiziksel
+    dosya silinir. Böylece DB commit'i patlarsa hiçbir şey kaybolmaz; ChromaDB
+    silme patlarsa geriye yalnızca "yetim" vektör kalır. Yetim vektörler
+    retrieval tarafında (PG'de karşılığı olmadığı için) sonuçlardan elenir, yani
+    silinen dokümandan arama sonucu DÖNMEZ; ayrıca `scripts/reindex.py --check`
+    ile tespit edilip temizlenebilir.
     """
     document = _get_owned_document(db, document_id, current_user)
+    document_id = document.id
     file_path = document.file_path
 
-    # ChromaDB vektörlerini sil (DB silmeden önce; başarısız olursa doküman
-    # silinmez ve kullanıcı tekrar deneyebilir).
-    try:
-        vector_store.delete_by_document(document.id)
-    except vector_store.VectorStoreError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Vektör veritabanına ulaşılamadı. Doküman silinemedi.",
-        ) from exc
-
-    # ORM silme: Document.chunks ilişkisindeki cascade ile chunk'lar da silinir.
+    # 1) PostgreSQL: ORM silme — Document.chunks cascade'i ile chunk'lar da gider.
     db.delete(document)
     db.commit()
 
-    # Fiziksel dosyayı sil (DB tutarlılığı korunduktan sonra; hata yutulur).
+    # 2) ChromaDB: vektörleri sil. Patlarsa isteği başarısız saymayız; doküman
+    #    DB'den gitti ve yetim vektörler retrieval'da zaten elenir. Sadece loglar
+    #    ve reconcile (reindex --check) ile temizlenmek üzere bırakırız.
+    try:
+        vector_store.delete_by_document(document_id)
+    except vector_store.VectorStoreError:
+        logger.warning(
+            "Doküman DB'den silindi ama ChromaDB vektörleri silinemedi "
+            "(yetim vektör kaldı): document_id=%s",
+            document_id,
+        )
+
+    # 3) Fiziksel dosyayı sil (hata yutulur).
     try:
         file_service.delete_file(file_path)
     except ValueError:
