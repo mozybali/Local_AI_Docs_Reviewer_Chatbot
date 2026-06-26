@@ -1102,8 +1102,8 @@ Retrieval sonuçlarını lokal LLM'e bağlam olarak verip kaynaklı ve kontroll�
 
 ### Yapılacaklar
 
-- LM Studio kurulumu yapılır.
-- Lokal LLM modeli seçilir.
+- LM Studio kurulumu hali hazırda yapıldı.
+- Lokal LLM modeli seçilir.(google/gemma-4-12b-qat)
 - `llm_service.py` yazılır.
 - LLM bağlantısı test edilir.
 - RAG prompt şablonu hazırlanır.
