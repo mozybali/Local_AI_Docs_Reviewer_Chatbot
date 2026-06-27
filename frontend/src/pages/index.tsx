@@ -50,6 +50,21 @@ export default function HomePage() {
                 Dokümanlarım
               </button>
             </Link>
+            {user?.role === "admin" && (
+              <Link href="/admin">
+                <button
+                  style={{
+                    ...ui.button,
+                    background: "transparent",
+                    color: "#fbbf24",
+                    border: "1px solid #78350f",
+                    marginTop: "0.75rem",
+                  }}
+                >
+                  Admin Paneli
+                </button>
+              </Link>
+            )}
             <button
               type="button"
               onClick={logout}

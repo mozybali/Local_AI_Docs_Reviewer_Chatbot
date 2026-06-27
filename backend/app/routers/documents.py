@@ -12,7 +12,6 @@ filtrelenir; başka kullanıcının dokümanına erişim `404` döner (varlığ�
 sızdırmamak için).
 """
 
-import logging
 from datetime import datetime
 
 from fastapi import (
@@ -32,12 +31,11 @@ from app.database import get_db
 from app.models.chunk import Chunk
 from app.models.document import Document
 from app.models.user import User
-from app.services import file_service, vector_store
+from app.services import file_service
 from app.services.document_processor import process_document
+from app.services.document_service import delete_document_fully
 from app.utils.dependencies import get_current_user
 from app.utils.file_validation import FileValidationError, validate_upload
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -198,38 +196,9 @@ def delete_document(
 
     Silme sonrası bu dokümandan artık arama sonucu dönmemelidir.
 
-    Sıra: PostgreSQL tek doğruluk kaynağı olduğu için önce DB kaydı (cascade ile
-    chunk'lar) silinip COMMIT edilir; ardından ChromaDB vektörleri ve fiziksel
-    dosya silinir. Böylece DB commit'i patlarsa hiçbir şey kaybolmaz; ChromaDB
-    silme patlarsa geriye yalnızca "yetim" vektör kalır. Yetim vektörler
-    retrieval tarafında (PG'de karşılığı olmadığı için) sonuçlardan elenir, yani
-    silinen dokümandan arama sonucu DÖNMEZ; ayrıca `scripts/reindex.py --check`
-    ile tespit edilip temizlenebilir.
+    Silme mantığı (PostgreSQL + ChromaDB + fiziksel dosya) `document_service`
+    içinde toplanır; admin silme endpoint'i de aynı yardımcıyı kullanır.
     """
     document = _get_owned_document(db, document_id, current_user)
-    document_id = document.id
-    file_path = document.file_path
-
-    # 1) PostgreSQL: ORM silme — Document.chunks cascade'i ile chunk'lar da gider.
-    db.delete(document)
-    db.commit()
-
-    # 2) ChromaDB: vektörleri sil. Patlarsa isteği başarısız saymayız; doküman
-    #    DB'den gitti ve yetim vektörler retrieval'da zaten elenir. Sadece loglar
-    #    ve reconcile (reindex --check) ile temizlenmek üzere bırakırız.
-    try:
-        vector_store.delete_by_document(document_id)
-    except vector_store.VectorStoreError:
-        logger.warning(
-            "Doküman DB'den silindi ama ChromaDB vektörleri silinemedi "
-            "(yetim vektör kaldı): document_id=%s",
-            document_id,
-        )
-
-    # 3) Fiziksel dosyayı sil (hata yutulur).
-    try:
-        file_service.delete_file(file_path)
-    except ValueError:
-        pass
-
+    delete_document_fully(db, document)
     return None

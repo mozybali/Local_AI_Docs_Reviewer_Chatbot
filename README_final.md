@@ -1195,7 +1195,7 @@ Rol bazlı yetkilendirmeyi (RBAC) uygulamak ve kullanıcı ile doküman yönetim
 Web arayüzünü tamamlamak, tüm akışları cilalamak ve hata yönetimini iyileştirmek.
 
 ### Yapılacaklar
-
+- İşlemler animasyonlu hale getirilmeye çalışılır.
 - Chat ekranı tamamlanır ve kaynak gösterme paneli eklenir.
 - Doküman yükleme ve listeleme ekranları iyileştirilir.
 - Admin paneli iyileştirilir.
@@ -1203,6 +1203,7 @@ Web arayüzünü tamamlamak, tüm akışları cilalamak ve hata yönetimini iyil
 - Yükleme ve işleme durumu göstergeleri iyileştirilir.
 - Sohbet geçmişi zaman kalırsa eklenir.
 - Responsive (mobil uyumlu) düzen gözden geçirilir.
+- Olmayan sayfalar için "Sayfa bulunamadı." sayfası kurulmalıdır.
 
 ### Kabul Kriterleri
 
