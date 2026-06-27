@@ -1,0 +1,168 @@
+"""`/documents` endpoint'leri için HTTP + çok kullanıcılı izolasyon testleri (Hafta 7).
+
+README "7. Hafta — Test" kabul kriteri: *"Kimlik doğrulama ve yetkilendirme
+testleri yapılır (token yok -> 401, başka kullanıcı dokümanı -> 403/404 ...)"*.
+
+Bu dosya doküman uçlarındaki sahiplik kontrolünü doğrular:
+- Token yok -> 401 (liste, durum, silme).
+- Kullanıcı yalnızca kendi dokümanlarını listeler (izolasyon).
+- Başka kullanıcının dokümanına erişim/silme -> 404 (varlığı sızdırmamak için
+  403 yerine 404; bkz. documents router `_get_owned_document`).
+- Sahip kendi dokümanının durumunu görebilir ve silebilir.
+- Pasif kullanıcı -> 403.
+
+DB için bellek içi SQLite kullanılır; silmenin ChromaDB/dosya yan etkileri
+monkeypatch ile devre dışı bırakılır (auth/authz davranışına odaklanmak için).
+"""
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from app.database import Base, get_db
+from app.models.document import Document
+from app.models.user import User
+from app.routers import documents
+from app.services import document_service
+from app.utils.security import create_access_token, hash_password
+
+
+@pytest.fixture()
+def client(monkeypatch):
+    """Yalnızca `documents` router'ını içeren izole test uygulaması.
+
+    Seed:
+    - id=1 user (aktif) -> doc 10 (ready)
+    - id=2 user (aktif) -> doc 20 (ready)
+    - id=3 user (pasif)
+    """
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+        future=True,
+    )
+    Base.metadata.create_all(engine)
+    TestingSession = sessionmaker(bind=engine, future=True)
+
+    seed = TestingSession()
+    seed.add_all([
+        User(id=1, email="u1@x.com", hashed_password=hash_password("x"),
+             role="user", is_active=True),
+        User(id=2, email="u2@x.com", hashed_password=hash_password("x"),
+             role="user", is_active=True),
+        User(id=3, email="u3@x.com", hashed_password=hash_password("x"),
+             role="user", is_active=False),
+    ])
+    seed.add_all([
+        Document(id=10, user_id=1, filename="u1.pdf", original_filename="u1.pdf",
+                 file_type="pdf", file_path="/uploads/u1.pdf", status="ready"),
+        Document(id=20, user_id=2, filename="u2.pdf", original_filename="u2.pdf",
+                 file_type="pdf", file_path="/uploads/u2.pdf", status="ready"),
+    ])
+    seed.commit()
+    seed.close()
+
+    def override_get_db():
+        db = TestingSession()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    # Silmenin dış yan etkilerini (ChromaDB, fiziksel dosya) devre dışı bırak.
+    monkeypatch.setattr(
+        document_service.vector_store, "delete_by_document", lambda doc_id: None
+    )
+    monkeypatch.setattr(
+        document_service.file_service, "delete_file", lambda path: True
+    )
+
+    app = FastAPI()
+    app.include_router(documents.router)
+    app.dependency_overrides[get_db] = override_get_db
+
+    yield TestClient(app)
+
+    app.dependency_overrides.clear()
+
+
+def _auth(user_id: int) -> dict[str, str]:
+    token = create_access_token(subject=user_id, role="user")
+    return {"Authorization": f"Bearer {token}"}
+
+
+# --- Token yok -> 401 ----------------------------------------------------
+
+
+def test_list_without_token_returns_401(client):
+    assert client.get("/documents").status_code == 401
+
+
+def test_status_without_token_returns_401(client):
+    assert client.get("/documents/10/status").status_code == 401
+
+
+def test_delete_without_token_returns_401(client):
+    assert client.delete("/documents/10").status_code == 401
+
+
+# --- İzolasyon: kullanıcı yalnızca kendi dokümanlarını görür -------------
+
+
+def test_user_lists_only_own_documents(client):
+    res = client.get("/documents", headers=_auth(1))
+    assert res.status_code == 200
+    docs = res.json()
+    assert {d["id"] for d in docs} == {10}
+
+
+# --- Başka kullanıcının dokümanı -> 404 ----------------------------------
+
+
+def test_status_of_other_users_document_returns_404(client):
+    # Kullanıcı 1, kullanıcı 2'nin dokümanının (20) durumunu sorgulayamaz.
+    res = client.get("/documents/20/status", headers=_auth(1))
+    assert res.status_code == 404
+
+
+def test_delete_other_users_document_returns_404(client):
+    # Kullanıcı 1, kullanıcı 2'nin dokümanını (20) silemez.
+    res = client.delete("/documents/20", headers=_auth(1))
+    assert res.status_code == 404
+
+    # Doküman 20 hâlâ sahibinde durmalı (silinmemiş olmalı).
+    owner_view = client.get("/documents/20/status", headers=_auth(2))
+    assert owner_view.status_code == 200
+
+
+# --- Sahip kendi dokümanına erişebilir / silebilir -----------------------
+
+
+def test_owner_can_read_own_document_status(client):
+    res = client.get("/documents/10/status", headers=_auth(1))
+    assert res.status_code == 200
+    assert res.json()["status"] == "ready"
+
+
+def test_owner_can_delete_own_document(client):
+    res = client.delete("/documents/10", headers=_auth(1))
+    assert res.status_code == 204
+
+    # Silindikten sonra sahibi için de 404 dönmeli.
+    assert client.get("/documents/10/status", headers=_auth(1)).status_code == 404
+
+
+def test_missing_document_returns_404(client):
+    res = client.get("/documents/999/status", headers=_auth(1))
+    assert res.status_code == 404
+
+
+# --- Pasif kullanıcı -> 403 ----------------------------------------------
+
+
+def test_passive_user_returns_403(client):
+    assert client.get("/documents", headers=_auth(3)).status_code == 403

@@ -1,114 +1,27 @@
 {
   "runs": [
     {
-      "timestamp": "2026-06-27T13:06:44.451309+00:00",
+      "timestamp": "2026-06-27T13:16:18.075375+00:00",
       "user": "user@example.com",
       "top_k": 5,
       "num_questions": 21,
       "num_positive": 15,
       "num_negative": 6,
-      "configured_min_score": 0.0,
-      "recall_at_k": 0.8,
-      "mrr": 0.6833,
-      "rejection_rate": 0.0,
+      "source_accuracy": 0.7333,
+      "answer_rate": 0.7333,
+      "no_hallucination_rate": 1.0,
       "targets": {
-        "recall_at_k": 0.7,
-        "mrr": 0.5
+        "source_accuracy": 0.8,
+        "no_hallucination_rate": 0.8
       },
-      "recommended_min_score": 0.5,
-      "sweep": [
-        {
-          "threshold": 0.0,
-          "pos_total": 15,
-          "recall_at_k": 0.8,
-          "mrr": 0.6833,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.1,
-          "pos_total": 15,
-          "recall_at_k": 0.8,
-          "mrr": 0.6833,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.15,
-          "pos_total": 15,
-          "recall_at_k": 0.8,
-          "mrr": 0.6833,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.2,
-          "pos_total": 15,
-          "recall_at_k": 0.8,
-          "mrr": 0.6833,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.25,
-          "pos_total": 15,
-          "recall_at_k": 0.8,
-          "mrr": 0.6833,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.3,
-          "pos_total": 15,
-          "recall_at_k": 0.8,
-          "mrr": 0.6833,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.35,
-          "pos_total": 15,
-          "recall_at_k": 0.8,
-          "mrr": 0.6833,
-          "neg_total": 6,
-          "rejection_rate": 0.1667
-        },
-        {
-          "threshold": 0.4,
-          "pos_total": 15,
-          "recall_at_k": 0.8,
-          "mrr": 0.6833,
-          "neg_total": 6,
-          "rejection_rate": 0.3333
-        },
-        {
-          "threshold": 0.45,
-          "pos_total": 15,
-          "recall_at_k": 0.8,
-          "mrr": 0.6833,
-          "neg_total": 6,
-          "rejection_rate": 0.3333
-        },
-        {
-          "threshold": 0.5,
-          "pos_total": 15,
-          "recall_at_k": 0.8,
-          "mrr": 0.6833,
-          "neg_total": 6,
-          "rejection_rate": 0.5
-        }
-      ],
       "details": [
         {
           "id": 1,
           "question": "Sınavlarda kopya çekmek hangi disiplin cezasını gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Sınavlarda kopya çekmek veya çektirmek, yükseköğretim kurumundan bir yarıyıl için uzaklaştırma cezasını gerektiren disiplin suçları arasında yer almaktadır.\n\nKaynaklar\n[Kaynak 5]",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 4,
@@ -134,18 +47,20 @@
               "page": 2,
               "score": 0.6545
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Yükseköğretim kurumundan bir yarıyıl için uzaklaştırma cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.8
         },
         {
           "id": 2,
           "question": "Sınavlarda kopyaya teşebbüs etmek hangi disiplin cezasını gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 1,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Sınavlarda kopyaya teşebbüs etmek, Kınama cezasını gerektiren bir disiplin suçudur.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 4,
@@ -171,18 +86,20 @@
               "page": 1,
               "score": 0.6173
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Kınama cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.5
         },
         {
           "id": 3,
           "question": "Yükseköğretim kurumunda alkollü içki içmek hangi cezayı gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 2,
-          "reciprocal_rank": 0.5,
-          "retrieved": [
+          "answer": "Yükseköğretim kurumunda alkollü içki içmek, yükseköğretim kurumundan bir haftadan bir aya kadar uzaklaştırma cezasını gerektiren eylemler arasında yer almaktadır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi_23.12.2016_.pdf",
               "page": 3,
@@ -208,18 +125,20 @@
               "page": 2,
               "score": 0.5286
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Bir haftadan bir aya kadar uzaklaştırma cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.75
         },
         {
           "id": 4,
           "question": "Disiplin cezalarına karşı kaç gün içinde itiraz edilebilir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 5,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Disiplin amirleri ve kurullarınca verilen disiplin cezalarına karşı onbeş gün içinde üniversite yönetim kuruluna itiraz edilebilir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 5,
@@ -245,18 +164,20 @@
               "page": 3,
               "score": 0.611
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Onbeş gün içinde üniversite yönetim kuruluna itiraz edilebilir.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 1.0
         },
         {
           "id": 5,
           "question": "Disiplin soruşturmasında öğrenciye savunma için en az kaç gün önceden bildirim yapılır?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 3,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 3,
@@ -282,18 +203,20 @@
               "page": 15,
               "score": 0.6395
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Savunmasını yapacağı tarihten en az yedi gün önce yazılı olarak bildirilir.",
+          "source_correct": false,
+          "answered": false,
+          "answer_keyword_overlap": 0.0
         },
         {
           "id": 6,
           "question": "Yükseköğretim kurumunda uyuşturucu madde satmak hangi disiplin cezasını gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Yükseköğretim kurumlarında uyuşturucu veya uyarıcı maddeleri satmak, satın almak, başkalarına vermek ve ticaretini yapmak yükseköğretim kurumundan çıkarma cezasını gerektiren bir eylemdir.\n\nKaynaklar",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 4,
@@ -319,18 +242,20 @@
               "page": 5,
               "score": 0.5899
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Yükseköğretim kurumundan çıkarma cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.75
         },
         {
           "id": 7,
           "question": "Dikey geçiş yönetmeliğinin amacı nedir?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 1,
-          "hit": false,
-          "rank": null,
-          "reciprocal_rank": 0.0,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 4,
@@ -356,18 +281,20 @@
               "page": 5,
               "score": 0.422
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Meslek yüksekokulları ve açıköğretim ön lisans mezunlarının lisans öğrenimine dikey geçiş yapmalarıyla ilgili esas ve usulleri belirlemek.",
+          "source_correct": false,
+          "answered": false,
+          "answer_keyword_overlap": 0.0
         },
         {
           "id": 8,
           "question": "Dikey geçiş için lisans programlarında ayrılan kontenjan en az ne kadar olabilir?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 1,
-          "hit": false,
-          "rank": null,
-          "reciprocal_rank": 0.0,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 4,
@@ -393,18 +320,20 @@
               "page": 3,
               "score": 0.4395
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Sınavsız olarak meslek yüksekokulu programlarından mezun olan öğrencilerin yüzde onundan az olamaz.",
+          "source_correct": false,
+          "answered": false,
+          "answer_keyword_overlap": 0.0
         },
         {
           "id": 9,
           "question": "Dikey geçiş sınavı kılavuzunu hangi kurum hazırlar?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 1,
-          "hit": false,
-          "rank": null,
-          "reciprocal_rank": 0.0,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 4,
@@ -430,18 +359,20 @@
               "page": 5,
               "score": 0.5781
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Öğrenci Seçme ve Yerleştirme Merkezi (ÖSYM).",
+          "source_correct": false,
+          "answered": false,
+          "answer_keyword_overlap": 0.0
         },
         {
           "id": 10,
           "question": "Dikey geçişte adaylar ne tür bir sınava alınır?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 4,
-          "reciprocal_rank": 0.25,
-          "retrieved": [
+          "answer": "Bu Yönetmelikte belirlenen koşulları sağlayan ve başvuruları kabul edilen adaylar, sözel ve sayısal bölümlerden oluşan bir yetenek sınavına alınır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 6,
@@ -467,18 +398,20 @@
               "page": 5,
               "score": 0.5244
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Sözel ve sayısal bölümlerden oluşan bir yetenek sınavına alınırlar.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.857
         },
         {
           "id": 11,
           "question": "Eşdeğer diploma programı ne anlama gelir?",
           "negative": false,
-          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
-          "expected_page": 1,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Eşdeğer diploma programı kavramı, bağlama göre farklı şekillerde tanımlanmaktadır:\n\n*   **Kurumlar Arası Yatay Geçiş:** Kurumlar arası yatay geçişler, yükseköğretim kurumlarının aynı düzeydeki eşdeğer diploma programları arasında gerçekleştirilir.\n*   **Yatay Geçiş Şartı:** Yatay geçiş başvurusu yaparken, kayıtlı olduğunuz diploma programının başvurduğunuz önlisans veya lisans diploma programına eşdeğerliğinin ilgili üniversite tarafından kabul edilmesi şartı aranır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 5,
@@ -504,18 +437,20 @@
               "page": 11,
               "score": 0.6242
             }
-          ]
+          ],
+          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
+          "expected_answer": "İsimleri aynı olan veya içeriklerinin en az yüzde sekseni aynı olduğu tespit edilen diploma programları.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.3
         },
         {
           "id": 12,
           "question": "Lisans diploma programlarında hangi yarıyıllara yatay geçiş yapılamaz?",
           "negative": false,
-          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
-          "expected_page": 3,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Lisans diploma programlarının ilk iki yarıyılı ile son iki yarıyılına yatay geçiş yapılamaz.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 3,
@@ -541,18 +476,20 @@
               "page": 5,
               "score": 0.6355
             }
-          ]
+          ],
+          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
+          "expected_answer": "Hazırlık sınıfına ve lisans programlarının ilk iki yarıyılı ile son iki yarıyılına yatay geçiş yapılamaz.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.833
         },
         {
           "id": 13,
           "question": "Açık veya uzaktan öğretimden örgün öğretim programlarına yatay geçişte genel not ortalaması en az kaç olmalıdır?",
           "negative": false,
-          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
-          "expected_page": 3,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Açık ve uzaktan öğretimden örgün öğretim programlarına geçiş yapabilmek için öğrencinin mevcut programındaki genel not ortalamasının 100 üzerinden en az 80 olması gerekmektedir. Alternatif olarak, kayıt olduğu yıldaki merkezi yerleştirme puanının, geçmek istediği üniversitenin diploma programının o yılki taban puanına eşit veya yüksek olması şartı aranır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 3,
@@ -578,18 +515,20 @@
               "page": 14,
               "score": 0.6578
             }
-          ]
+          ],
+          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
+          "expected_answer": "100 üzerinden 80 veya üzeri olmalıdır.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.5
         },
         {
           "id": 14,
           "question": "Pamukkale Üniversitesi'nde lisans programları için azami öğrenim süresi kaç yıldır?",
           "negative": false,
-          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
-          "expected_page": 5,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Pamukkale Üniversitesi'nde lisans programlarının azami öğrenim süreleri, programın süresine göre farklılık göstermektedir:\n\n*   Dört yıllık lisans programları için azami öğrenim süresi yaz öğrenimi hariç yedi yıldır.\n*   Beş yıllık lisans programları için azami öğrenim süresi yaz öğrenimi hariç sekiz yıldır.\n*   Altı yıllık lisans programları için azami öğrenim süresi yaz öğrenimi hariç dokuz yıldır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
               "page": 14,
@@ -615,18 +554,20 @@
               "page": 2,
               "score": 0.5027
             }
-          ]
+          ],
+          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
+          "expected_answer": "Tıp ve Diş Hekimliği Fakültesi hariç yedi akademik yıl (ondört yarıyıl).",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.2
         },
         {
           "id": 15,
           "question": "Yandal programına devam edebilmek için öğrencinin anadal not ortalaması en az kaç olmalıdır?",
           "negative": false,
-          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
-          "expected_page": 9,
-          "hit": true,
-          "rank": 2,
-          "reciprocal_rank": 0.5,
-          "retrieved": [
+          "answer": "Yandal programına devam edebilmek için öğrencinin anadal programındaki not ortalamasının en az 100 üzerinden 60 olması şarttır. Bu şartı sağlayamayan öğrencilerin yandal programından kaydı silinir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 9,
@@ -652,14 +593,20 @@
               "page": 7,
               "score": 0.5097
             }
-          ]
+          ],
+          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
+          "expected_answer": "Anadal programındaki not ortalamasının en az 2.30 olması şarttır.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 1.0
         },
         {
           "id": 100,
           "question": "Üniversite yemekhanesinde öğle yemeği ücreti ne kadardır?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 8,
@@ -685,14 +632,16 @@
               "page": 4,
               "score": 0.3121
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 101,
           "question": "Öğrenci yurtlarına başvuru için gereken aylık aile gelir sınırı nedir?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 8,
@@ -718,14 +667,16 @@
               "page": 14,
               "score": 0.4488
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 102,
           "question": "Erasmus değişim programında öğrencilere ödenen aylık hibe kaç Euro'dur?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
               "page": 4,
@@ -751,14 +702,16 @@
               "page": 11,
               "score": 0.4487
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 103,
           "question": "Kütüphaneden bir öğrenci aynı anda en fazla kaç kitap ödünç alabilir?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 8,
@@ -784,14 +737,16 @@
               "page": 15,
               "score": 0.4673
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 104,
           "question": "Bu yılki mezuniyet töreni hangi tarihte yapılacaktır?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 3,
@@ -817,14 +772,16 @@
               "page": 14,
               "score": 0.4626
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 105,
           "question": "Kampüsteki kapalı spor salonunun aylık üyelik ücreti nedir?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 9,
@@ -850,119 +807,33 @@
               "page": 4,
               "score": 0.2437
             }
-          ]
+          ],
+          "no_hallucination": true
         }
       ]
     },
     {
-      "timestamp": "2026-06-27T13:23:44.019026+00:00",
+      "timestamp": "2026-06-27T13:32:07.554417+00:00",
       "user": "user@example.com",
       "top_k": 8,
       "num_questions": 21,
       "num_positive": 15,
       "num_negative": 6,
-      "configured_min_score": 0.0,
-      "recall_at_k": 0.9333,
-      "mrr": 0.7056,
-      "rejection_rate": 0.0,
+      "source_accuracy": 0.9333,
+      "answer_rate": 0.9333,
+      "no_hallucination_rate": 1.0,
       "targets": {
-        "recall_at_k": 0.7,
-        "mrr": 0.5
+        "source_accuracy": 0.8,
+        "no_hallucination_rate": 0.8
       },
-      "recommended_min_score": 0.5,
-      "sweep": [
-        {
-          "threshold": 0.0,
-          "pos_total": 15,
-          "recall_at_k": 0.9333,
-          "mrr": 0.7056,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.1,
-          "pos_total": 15,
-          "recall_at_k": 0.9333,
-          "mrr": 0.7056,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.15,
-          "pos_total": 15,
-          "recall_at_k": 0.9333,
-          "mrr": 0.7056,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.2,
-          "pos_total": 15,
-          "recall_at_k": 0.9333,
-          "mrr": 0.7056,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.25,
-          "pos_total": 15,
-          "recall_at_k": 0.9333,
-          "mrr": 0.7056,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.3,
-          "pos_total": 15,
-          "recall_at_k": 0.9333,
-          "mrr": 0.7056,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.35,
-          "pos_total": 15,
-          "recall_at_k": 0.9333,
-          "mrr": 0.7056,
-          "neg_total": 6,
-          "rejection_rate": 0.1667
-        },
-        {
-          "threshold": 0.4,
-          "pos_total": 15,
-          "recall_at_k": 0.9333,
-          "mrr": 0.7056,
-          "neg_total": 6,
-          "rejection_rate": 0.3333
-        },
-        {
-          "threshold": 0.45,
-          "pos_total": 15,
-          "recall_at_k": 0.8667,
-          "mrr": 0.6944,
-          "neg_total": 6,
-          "rejection_rate": 0.3333
-        },
-        {
-          "threshold": 0.5,
-          "pos_total": 15,
-          "recall_at_k": 0.8667,
-          "mrr": 0.6944,
-          "neg_total": 6,
-          "rejection_rate": 0.5
-        }
-      ],
       "details": [
         {
           "id": 1,
           "question": "Sınavlarda kopya çekmek hangi disiplin cezasını gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Sınavlarda kopya çekme eyleminin niteliğine göre farklı disiplin cezaları gerektirebilir:\n\n*   **Kınama Cezası:** Sınavlarda kopyaya teşebbüs etmek kınama cezasını gerektirir.\n*   **Bir Yarıyıl Uzaklaştırma Cezası:** Sınavlarda kopya çekmek veya çektirmek, yükseköğretim kurumundan bir yarıyıl için uzaklaştırma cezasını gerektiren eylemler arasındadır.\n*   **İki Yarıyıl Uzaklaştırma Cezası:** Tehditle kopya çekmek, kopya çeken öğrencilerin sınav salonundan çıkarılmasına engel olmak, kendi yerine başkasını sınava sokmak veya başkasının yerine sınava girmek gibi eylemler yükseköğretim kurumundan iki yarıyıl için uzaklaştırma cezasını gerektirir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 4,
@@ -1003,18 +874,20 @@
               "page": 5,
               "score": 0.6364
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Yükseköğretim kurumundan bir yarıyıl için uzaklaştırma cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 1.0
         },
         {
           "id": 2,
           "question": "Sınavlarda kopyaya teşebbüs etmek hangi disiplin cezasını gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 1,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Sınavlarda kopyaya teşebbüs etmek kınama cezasını gerektiren bir eylemdir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 4,
@@ -1055,18 +928,20 @@
               "page": 5,
               "score": 0.5798
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Kınama cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.5
         },
         {
           "id": 3,
           "question": "Yükseköğretim kurumunda alkollü içki içmek hangi cezayı gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 2,
-          "reciprocal_rank": 0.5,
-          "retrieved": [
+          "answer": "Yükseköğretim kurumunda alkollü içki içmek, yükseköğretim kurumundan bir haftadan bir aya kadar uzaklaştırma cezasını gerektiren bir eylemdir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi_23.12.2016_.pdf",
               "page": 3,
@@ -1107,18 +982,20 @@
               "page": 1,
               "score": 0.4777
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Bir haftadan bir aya kadar uzaklaştırma cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.75
         },
         {
           "id": 4,
           "question": "Disiplin cezalarına karşı kaç gün içinde itiraz edilebilir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 5,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Disiplin amirleri ve kurullarınca verilen disiplin cezalarına karşı onbeş gün içinde üniversite yönetim kuruluna itiraz edilebilir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 5,
@@ -1159,18 +1036,20 @@
               "page": 4,
               "score": 0.52
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Onbeş gün içinde üniversite yönetim kuruluna itiraz edilebilir.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 1.0
         },
         {
           "id": 5,
           "question": "Disiplin soruşturmasında öğrenciye savunma için en az kaç gün önceden bildirim yapılır?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 3,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Hakkında disiplin soruşturması açılan öğrenciye isnat edilen suçun neden ibaret olduğu, savunmasını yapacağı tarihten en az yedi gün önce yazılı olarak bildirilmelidir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 3,
@@ -1211,18 +1090,20 @@
               "page": 5,
               "score": 0.6338
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Savunmasını yapacağı tarihten en az yedi gün önce yazılı olarak bildirilir.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.875
         },
         {
           "id": 6,
           "question": "Yükseköğretim kurumunda uyuşturucu madde satmak hangi disiplin cezasını gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Yükseköğretim kurumlarında uyuşturucu veya uyarıcı maddeleri satmak, satın almak, başkalarına vermek ve ticaretini yapmak yükseköğretim kurumundan çıkarma cezasını gerektiren bir eylemdir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 4,
@@ -1263,18 +1144,20 @@
               "page": 5,
               "score": 0.5496
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Yükseköğretim kurumundan çıkarma cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.75
         },
         {
           "id": 7,
           "question": "Dikey geçiş yönetmeliğinin amacı nedir?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 1,
-          "hit": true,
-          "rank": 6,
-          "reciprocal_rank": 0.1667,
-          "retrieved": [
+          "answer": "Bu yönetmeliğin amacı, meslek yüksekokulları ve açıköğretim ön lisans programlarından mezun olan başarılı öğrencilerin örgün öğretim ve açıköğretim lisans programlarına dikey geçiş yapmaları ve yerleştirilmeleriyle ilgili esas ve usulleri belirlemektir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 4,
@@ -1315,18 +1198,20 @@
               "page": 7,
               "score": 0.3937
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Meslek yüksekokulları ve açıköğretim ön lisans mezunlarının lisans öğrenimine dikey geçiş yapmalarıyla ilgili esas ve usulleri belirlemek.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.692
         },
         {
           "id": 8,
           "question": "Dikey geçiş için lisans programlarında ayrılan kontenjan en az ne kadar olabilir?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 1,
-          "hit": false,
-          "rank": null,
-          "reciprocal_rank": 0.0,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 4,
@@ -1367,18 +1252,20 @@
               "page": 5,
               "score": 0.3929
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Sınavsız olarak meslek yüksekokulu programlarından mezun olan öğrencilerin yüzde onundan az olamaz.",
+          "source_correct": false,
+          "answered": false,
+          "answer_keyword_overlap": 0.0
         },
         {
           "id": 9,
           "question": "Dikey geçiş sınavı kılavuzunu hangi kurum hazırlar?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 1,
-          "hit": true,
-          "rank": 6,
-          "reciprocal_rank": 0.1667,
-          "retrieved": [
+          "answer": "Öğrenci Seçme ve Yerleştirme Merkezi (ÖSYM) her yıl dikey geçiş kılavuzunu hazırlar. Bu kılavuz, meslek yüksekokulu ve açıköğretim önlisans mezunlarının hangi lisans programlarına başvurabileceğini, bu programların koşullarını ve alınacak öğrenci sayılarını gösterir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 4,
@@ -1419,18 +1306,20 @@
               "page": 1,
               "score": 0.5449
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Öğrenci Seçme ve Yerleştirme Merkezi (ÖSYM).",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 1.0
         },
         {
           "id": 10,
           "question": "Dikey geçişte adaylar ne tür bir sınava alınır?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 4,
-          "reciprocal_rank": 0.25,
-          "retrieved": [
+          "answer": "Bu Yönetmelikte belirlenen koşulları sağlayan ve başvuruları kabul edilen dikey geçiş adayları sözel ve sayısal bölümlerden oluşan bir yetenek sınavına alınır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 6,
@@ -1471,18 +1360,20 @@
               "page": 9,
               "score": 0.4958
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Sözel ve sayısal bölümlerden oluşan bir yetenek sınavına alınırlar.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.857
         },
         {
           "id": 11,
           "question": "Eşdeğer diploma programı ne anlama gelir?",
           "negative": false,
-          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
-          "expected_page": 1,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Eşdeğer diploma programları, yükseköğretim kurumlarının aynı düzeydeki programlarını ifade eder ve bu programlar arasında kurumlar arası yatay geçiş yapılabilir.\n\nAyrıca, yatay geçiş başvurusu yaparken, başvuru yapılan önlisans veya lisans diploma programının kayıtlı olduğu programa eşdeğerliğinin ilgili üniversite tarafından kabul edilmesi şartı aranır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 5,
@@ -1523,18 +1414,20 @@
               "page": 9,
               "score": 0.5869
             }
-          ]
+          ],
+          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
+          "expected_answer": "İsimleri aynı olan veya içeriklerinin en az yüzde sekseni aynı olduğu tespit edilen diploma programları.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.4
         },
         {
           "id": 12,
           "question": "Lisans diploma programlarında hangi yarıyıllara yatay geçiş yapılamaz?",
           "negative": false,
-          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
-          "expected_page": 3,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Lisans diploma programlarının hazırlık sınıfına, ilk iki yarıyılına ve son iki yarıyılına yatay geçiş yapılamaz.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 3,
@@ -1575,18 +1468,20 @@
               "page": 1,
               "score": 0.5561
             }
-          ]
+          ],
+          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
+          "expected_answer": "Hazırlık sınıfına ve lisans programlarının ilk iki yarıyılı ile son iki yarıyılına yatay geçiş yapılamaz.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.917
         },
         {
           "id": 13,
           "question": "Açık veya uzaktan öğretimden örgün öğretim programlarına yatay geçişte genel not ortalaması en az kaç olmalıdır?",
           "negative": false,
-          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
-          "expected_page": 3,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Açık veya uzaktan öğretimden örgün öğretim programlarına geçiş yapabilmek için, öğrencinin kayıtlı olduğu programdaki genel not ortalamasının 100 üzerinden en az 80 olması gerekir. Alternatif olarak, kayıt olduğu yıldaki merkezi yerleştirme puanının, geçmek istediği üniversitenin diploma programının o yılki taban puanına eşit veya yüksek olması şartı da aranmaktadır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 3,
@@ -1627,18 +1522,20 @@
               "page": 4,
               "score": 0.6286
             }
-          ]
+          ],
+          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
+          "expected_answer": "100 üzerinden 80 veya üzeri olmalıdır.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.5
         },
         {
           "id": 14,
           "question": "Pamukkale Üniversitesi'nde lisans programları için azami öğrenim süresi kaç yıldır?",
           "negative": false,
-          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
-          "expected_page": 5,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Pamukkale Üniversitesi'nde lisans programlarının azami öğrenim süreleri, programın süresine göre farklılık göstermektedir:\n\n*   Dört yıllık lisans programları için azami öğrenim süresi, yaz öğrenimi hariç yedi yıldır.\n*   Beş yıllık lisans programları için azami öğrenim süresi, yaz öğrenimi hariç sekiz yıldır.\n*   Altı yıllık lisans programları için azami öğrenim süresi, yaz öğrenimi hariç dokuz yıldır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
               "page": 14,
@@ -1679,18 +1576,20 @@
               "page": 4,
               "score": 0.4883
             }
-          ]
+          ],
+          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
+          "expected_answer": "Tıp ve Diş Hekimliği Fakültesi hariç yedi akademik yıl (ondört yarıyıl).",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.2
         },
         {
           "id": 15,
           "question": "Yandal programına devam edebilmek için öğrencinin anadal not ortalaması en az kaç olmalıdır?",
           "negative": false,
-          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
-          "expected_page": 9,
-          "hit": true,
-          "rank": 2,
-          "reciprocal_rank": 0.5,
-          "retrieved": [
+          "answer": "Yandal programına devam edebilmek için öğrencinin anadal programındaki not ortalamasının en az 100 üzerinden 60 olması şarttır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 9,
@@ -1731,14 +1630,20 @@
               "page": 12,
               "score": 0.4769
             }
-          ]
+          ],
+          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
+          "expected_answer": "Anadal programındaki not ortalamasının en az 2.30 olması şarttır.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 1.0
         },
         {
           "id": 100,
           "question": "Üniversite yemekhanesinde öğle yemeği ücreti ne kadardır?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 8,
@@ -1779,14 +1684,16 @@
               "page": 15,
               "score": 0.2876
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 101,
           "question": "Öğrenci yurtlarına başvuru için gereken aylık aile gelir sınırı nedir?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 8,
@@ -1827,14 +1734,16 @@
               "page": 3,
               "score": 0.4031
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 102,
           "question": "Erasmus değişim programında öğrencilere ödenen aylık hibe kaç Euro'dur?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
               "page": 4,
@@ -1875,14 +1784,16 @@
               "page": 3,
               "score": 0.4197
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 103,
           "question": "Kütüphaneden bir öğrenci aynı anda en fazla kaç kitap ödünç alabilir?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 8,
@@ -1923,14 +1834,16 @@
               "page": 4,
               "score": 0.4241
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 104,
           "question": "Bu yılki mezuniyet töreni hangi tarihte yapılacaktır?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 3,
@@ -1971,14 +1884,16 @@
               "page": 1,
               "score": 0.4147
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 105,
           "question": "Kampüsteki kapalı spor salonunun aylık üyelik ücreti nedir?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 9,
@@ -2019,119 +1934,33 @@
               "page": 3,
               "score": 0.2334
             }
-          ]
+          ],
+          "no_hallucination": true
         }
       ]
     },
     {
-      "timestamp": "2026-06-27T16:29:59.123867+00:00",
+      "timestamp": "2026-06-27T16:42:17.590193+00:00",
       "user": "user@example.com",
       "top_k": 8,
       "num_questions": 21,
       "num_positive": 15,
       "num_negative": 6,
-      "configured_min_score": 0.0,
-      "recall_at_k": 1.0,
-      "mrr": 0.8778,
-      "rejection_rate": 0.0,
+      "source_accuracy": 1.0,
+      "answer_rate": 1.0,
+      "no_hallucination_rate": 1.0,
       "targets": {
-        "recall_at_k": 0.7,
-        "mrr": 0.5
+        "source_accuracy": 0.8,
+        "no_hallucination_rate": 0.8
       },
-      "recommended_min_score": 0.5,
-      "sweep": [
-        {
-          "threshold": 0.0,
-          "pos_total": 15,
-          "recall_at_k": 1.0,
-          "mrr": 0.8778,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.1,
-          "pos_total": 15,
-          "recall_at_k": 1.0,
-          "mrr": 0.8778,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.15,
-          "pos_total": 15,
-          "recall_at_k": 1.0,
-          "mrr": 0.8778,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.2,
-          "pos_total": 15,
-          "recall_at_k": 1.0,
-          "mrr": 0.8778,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.25,
-          "pos_total": 15,
-          "recall_at_k": 1.0,
-          "mrr": 0.8778,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.3,
-          "pos_total": 15,
-          "recall_at_k": 1.0,
-          "mrr": 0.8778,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.35,
-          "pos_total": 15,
-          "recall_at_k": 1.0,
-          "mrr": 0.8778,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.4,
-          "pos_total": 15,
-          "recall_at_k": 1.0,
-          "mrr": 0.8778,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.45,
-          "pos_total": 15,
-          "recall_at_k": 1.0,
-          "mrr": 0.8778,
-          "neg_total": 6,
-          "rejection_rate": 0.0
-        },
-        {
-          "threshold": 0.5,
-          "pos_total": 15,
-          "recall_at_k": 1.0,
-          "mrr": 0.8778,
-          "neg_total": 6,
-          "rejection_rate": 0.3333
-        }
-      ],
       "details": [
         {
           "id": 1,
           "question": "Sınavlarda kopya çekmek hangi disiplin cezasını gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Sınavlarda kopya çekmekle ilgili farklı durumlar ve gerektirdiği disiplin cezaları şunlardır:\n\n*   **Kopyaya teşebbüs etmek:** Kınama cezasını gerektirir.\n*   **Sınavlarda kopya çekmek veya çektirmek:** Bir yarıyıl için uzaklaştırma cezasını gerektirir.\n*   **Tehditle kopya çekmek, kopya çeken öğrencilerin sınav salonundan çıkarılmasına engel olmak, kendi yerine başkasını sınava sokmak veya başkasının yerine sınava girmek:** İki yarıyıl için uzaklaştırma cezasını gerektirir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 2,
@@ -2172,18 +2001,20 @@
               "page": 4,
               "score": 0.5426
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Yükseköğretim kurumundan bir yarıyıl için uzaklaştırma cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.4
         },
         {
           "id": 2,
           "question": "Sınavlarda kopyaya teşebbüs etmek hangi disiplin cezasını gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 1,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Sınavlarda kopyaya teşebbüs etmek, kınama cezasını gerektiren bir disiplin suçudur. Kınama, öğrenciye öğrencilikle ilgili kusurlu davranışlarından dolayı yazılı olarak bildirilmesini ifade eder.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 2,
@@ -2224,18 +2055,20 @@
               "page": 5,
               "score": 0.5504
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Kınama cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.5
         },
         {
           "id": 3,
           "question": "Yükseköğretim kurumunda alkollü içki içmek hangi cezayı gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Yükseköğretim kurumunda alkollü içki içmek, yükseköğretim kurumundan bir haftadan bir aya kadar uzaklaştırma cezasını gerektiren bir eylemdir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 2,
@@ -2276,18 +2109,20 @@
               "page": 7,
               "score": 0.5361
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Bir haftadan bir aya kadar uzaklaştırma cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.75
         },
         {
           "id": 4,
           "question": "Disiplin cezalarına karşı kaç gün içinde itiraz edilebilir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 5,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Disiplin amirleri ve kurullarınca verilen disiplin cezalarına karşı onbeş gün içinde üniversite yönetim kuruluna itiraz edilebilir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 5,
@@ -2328,18 +2163,20 @@
               "page": 2,
               "score": 0.5814
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Onbeş gün içinde üniversite yönetim kuruluna itiraz edilebilir.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 1.0
         },
         {
           "id": 5,
           "question": "Disiplin soruşturmasında öğrenciye savunma için en az kaç gün önceden bildirim yapılır?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 3,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Hakkında disiplin soruşturması açılan öğrenciye isnat edilen suçun neden ibaret olduğu, savunmasını yapacağı tarihten en az yedi gün önce yazılı olarak bildirilmelidir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
               "page": 3,
@@ -2380,18 +2217,20 @@
               "page": 4,
               "score": 0.5832
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Savunmasını yapacağı tarihten en az yedi gün önce yazılı olarak bildirilir.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.875
         },
         {
           "id": 6,
           "question": "Yükseköğretim kurumunda uyuşturucu madde satmak hangi disiplin cezasını gerektirir?",
           "negative": false,
-          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 2,
-          "reciprocal_rank": 0.5,
-          "retrieved": [
+          "answer": "Yükseköğretim kurumlarında uyuşturucu veya uyarıcı maddeleri satmak, satın almak, başkalarına vermek ve ticaretini yapmak yükseköğretim kurumundan çıkarma cezasını gerektiren bir eylemdir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi_23.12.2016_.pdf",
               "page": 3,
@@ -2432,18 +2271,20 @@
               "page": 4,
               "score": 0.5833
             }
-          ]
+          ],
+          "expected_source_doc": "Yuksekogretim_Kurumlar_Ogrenci_Disiplin_Yonetmeligi.pdf",
+          "expected_answer": "Yükseköğretim kurumundan çıkarma cezası.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.75
         },
         {
           "id": 7,
           "question": "Dikey geçiş yönetmeliğinin amacı nedir?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 1,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Bu Yönetmeliğin amacı, meslek yüksekokulları ve açıköğretim ön lisans programlarından mezun olan başarılı öğrencilerin örgün öğretim ve açıköğretim lisans programlarına dikey geçiş yapmaları ve yerleştirilmeleriyle ilgili esas ve usulleri belirlemektir.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
               "page": 1,
@@ -2484,18 +2325,20 @@
               "page": 1,
               "score": 0.4867
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Meslek yüksekokulları ve açıköğretim ön lisans mezunlarının lisans öğrenimine dikey geçiş yapmalarıyla ilgili esas ve usulleri belirlemek.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.692
         },
         {
           "id": 8,
           "question": "Dikey geçiş için lisans programlarında ayrılan kontenjan en az ne kadar olabilir?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 1,
-          "hit": true,
-          "rank": 3,
-          "reciprocal_rank": 0.3333,
-          "retrieved": [
+          "answer": "Meslek yüksekokulları ve açıköğretim ön lisans programlarından mezun olanların, bitirdikleri alanların devamı niteliğindeki lisans programlarına dikey geçiş yapmaları amacıyla ayrılan kontenjanlar, sınavsız olarak meslek yüksekokulu programlarına devam ederek mezun olan öğrencilerin yüzde onundan az olamaz.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 4,
@@ -2536,18 +2379,20 @@
               "page": 4,
               "score": 0.6216
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Sınavsız olarak meslek yüksekokulu programlarından mezun olan öğrencilerin yüzde onundan az olamaz.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 1.0
         },
         {
           "id": 9,
           "question": "Dikey geçiş sınavı kılavuzunu hangi kurum hazırlar?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 1,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Akademik not ortalamalarından elde edilecek Önlisans Başarı puanlarının sınav puanlarına katılarak Dikey Geçiş Sınavı Puanının nasıl hesaplanacağı ÖSYM tarafından belirlenir ve bu bilgi Dikey Geçiş Sınavı Kılavuzunda yer alır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
               "page": 2,
@@ -2588,18 +2433,20 @@
               "page": 3,
               "score": 0.5139
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Öğrenci Seçme ve Yerleştirme Merkezi (ÖSYM).",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.2
         },
         {
           "id": 10,
           "question": "Dikey geçişte adaylar ne tür bir sınava alınır?",
           "negative": false,
-          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
-          "expected_page": 2,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Bu Yönetmelikte belirlenen koşulları sağlayan ve başvuruları kabul edilen adaylar, sözel ve sayısal bölümlerden oluşan bir yetenek sınavına alınırlar.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
               "page": 2,
@@ -2640,18 +2487,20 @@
               "page": 7,
               "score": 0.5453
             }
-          ]
+          ],
+          "expected_source_doc": "Dikey_Gecis_Yonetmeligi_YOK_.pdf",
+          "expected_answer": "Sözel ve sayısal bölümlerden oluşan bir yetenek sınavına alınırlar.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 1.0
         },
         {
           "id": 11,
           "question": "Eşdeğer diploma programı ne anlama gelir?",
           "negative": false,
-          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
-          "expected_page": 1,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Eşdeğer diploma programları; isimleri aynı olan veya ilgili yönetim kurulları tarafından içeriklerinin en az yüzde sekseni aynı olduğu tespit edilen diploma programlarıdır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 1,
@@ -2692,18 +2541,20 @@
               "page": 9,
               "score": 0.5525
             }
-          ]
+          ],
+          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
+          "expected_answer": "İsimleri aynı olan veya içeriklerinin en az yüzde sekseni aynı olduğu tespit edilen diploma programları.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.9
         },
         {
           "id": 12,
           "question": "Lisans diploma programlarında hangi yarıyıllara yatay geçiş yapılamaz?",
           "negative": false,
-          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
-          "expected_page": 3,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Lisans diploma programlarının ilk iki yarıyılı ile son iki yarıyılına yatay geçiş yapılamaz.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 3,
@@ -2744,18 +2595,20 @@
               "page": 10,
               "score": 0.5822
             }
-          ]
+          ],
+          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
+          "expected_answer": "Hazırlık sınıfına ve lisans programlarının ilk iki yarıyılı ile son iki yarıyılına yatay geçiş yapılamaz.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.833
         },
         {
           "id": 13,
           "question": "Açık veya uzaktan öğretimden örgün öğretim programlarına yatay geçişte genel not ortalaması en az kaç olmalıdır?",
           "negative": false,
-          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
-          "expected_page": 3,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Açık veya uzaktan öğretimden örgün öğretim programlarına yatay geçiş yapabilmek için öğrencinin öğrenim görmekte olduğu programdaki genel not ortalamasının 100 üzerinden en az 80 olması gerekir. Alternatif olarak, kayıtlı olduğu yıldaki merkezi yerleştirme puanının, geçmek istediği üniversitenin diploma programının o yılki taban puanına eşit veya yüksek olması şarttır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 3,
@@ -2796,18 +2649,20 @@
               "page": 9,
               "score": 0.6317
             }
-          ]
+          ],
+          "expected_source_doc": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
+          "expected_answer": "100 üzerinden 80 veya üzeri olmalıdır.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.5
         },
         {
           "id": 14,
           "question": "Pamukkale Üniversitesi'nde lisans programları için azami öğrenim süresi kaç yıldır?",
           "negative": false,
-          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
-          "expected_page": 5,
-          "hit": true,
-          "rank": 1,
-          "reciprocal_rank": 1.0,
-          "retrieved": [
+          "answer": "Pamukkale Üniversitesi'nde lisans programları için azami öğrenim süreleri programa göre farklılık göstermektedir:\n\n*   Dört yıllık lisans programlarının azami öğrenim süresi, yaz öğrenimi hariç yedi yıldır.\n*   Beş yıllık lisans programlarının azami öğrenim süresi, yaz öğrenimi hariç sekiz yıldır.\n*   Altı yıllık lisans programlarının azami öğrenim süresi, yaz öğrenimi hariç dokuz yıldır.\n\nAyrıca, Tıp ve Diş Hekimliği Fakültesi dışındaki lisans programları için azami öğrenim süresi, yaz dönemleri hariç ondört yarıyıldan oluşan yedi akademik yıldır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
               "page": 1,
@@ -2848,18 +2703,20 @@
               "page": 1,
               "score": 0.5335
             }
-          ]
+          ],
+          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
+          "expected_answer": "Tıp ve Diş Hekimliği Fakültesi hariç yedi akademik yıl (ondört yarıyıl).",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 0.8
         },
         {
           "id": 15,
           "question": "Yandal programına devam edebilmek için öğrencinin anadal not ortalaması en az kaç olmalıdır?",
           "negative": false,
-          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
-          "expected_page": 9,
-          "hit": true,
-          "rank": 3,
-          "reciprocal_rank": 0.3333,
-          "retrieved": [
+          "answer": "Yandal programına devam edebilmesi için öğrencinin anadal programındaki not ortalamasının en az 100 üzerinden 60 olması şarttır.",
+          "no_answer": false,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 9,
@@ -2900,14 +2757,20 @@
               "page": 11,
               "score": 0.6004
             }
-          ]
+          ],
+          "expected_source_doc": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
+          "expected_answer": "Anadal programındaki not ortalamasının en az 2.30 olması şarttır.",
+          "source_correct": true,
+          "answered": true,
+          "answer_keyword_overlap": 1.0
         },
         {
           "id": 100,
           "question": "Üniversite yemekhanesinde öğle yemeği ücreti ne kadardır?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
               "page": 5,
@@ -2948,14 +2811,16 @@
               "page": 10,
               "score": 0.4879
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 101,
           "question": "Öğrenci yurtlarına başvuru için gereken aylık aile gelir sınırı nedir?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 9,
@@ -2996,14 +2861,16 @@
               "page": 4,
               "score": 0.4903
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 102,
           "question": "Erasmus değişim programında öğrencilere ödenen aylık hibe kaç Euro'dur?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
               "page": 5,
@@ -3044,14 +2911,16 @@
               "page": 3,
               "score": 0.4468
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 103,
           "question": "Kütüphaneden bir öğrenci aynı anda en fazla kaç kitap ödünç alabilir?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
               "page": 5,
@@ -3092,14 +2961,16 @@
               "page": 2,
               "score": 0.4536
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 104,
           "question": "Bu yılki mezuniyet töreni hangi tarihte yapılacaktır?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "Yatay_Gecis_Yonetmeligi_YOK_-_18.03.2016_degisiklikleri_ile_.pdf",
               "page": 1,
@@ -3140,14 +3011,16 @@
               "page": 1,
               "score": 0.4924
             }
-          ]
+          ],
+          "no_hallucination": true
         },
         {
           "id": 105,
           "question": "Kampüsteki kapalı spor salonunun aylık üyelik ücreti nedir?",
           "negative": true,
-          "rejected": false,
-          "retrieved": [
+          "answer": "Bu bilgi yüklenen dokümanda bulunamadı.",
+          "no_answer": true,
+          "sources": [
             {
               "document": "PAU_Onlisans_Lisans_Egitim_ve_Ogretim_Yonetmeligi_03.01.2017_.pdf",
               "page": 2,
@@ -3188,7 +3061,8 @@
               "page": 14,
               "score": 0.443
             }
-          ]
+          ],
+          "no_hallucination": true
         }
       ]
     }

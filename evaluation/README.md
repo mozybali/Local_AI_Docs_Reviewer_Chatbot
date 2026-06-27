@@ -16,6 +16,25 @@ Bu klasör iki işi yapan araçları içerir:
 | `ground_truth.json` | Gerçek test seti. **Siz doldurursunuz** (pozitif + negatif sorular). |
 | `run_eval.py` | Soruları gerçek retrieval hattından geçirir; Recall@k, MRR ve eşik taraması üretir. |
 | `results.json` | Runner'ın yazdığı koşu sonuçları (`runs` listesine eklenir; `sweep` dahil). |
+| `run_answer_eval.py` | Uçtan uca RAG (retrieval + LLM) çalıştırır; Source Accuracy + No Hallucination Rate üretir. **LM Studio gerektirir.** |
+| `answer_results.json` | `run_answer_eval.py`'nin yazdığı cevap kalitesi sonuçları (her cevabın metni dahil). |
+
+## Cevap kalitesi metrikleri (Hafta 7)
+
+`run_eval.py` yalnızca **retrieval** katmanını ölçer. Cevap (LLM) katmanı için:
+
+```bash
+python evaluation/run_answer_eval.py --user user@example.com
+```
+
+- **Source Accuracy** (≥ %80): Pozitif sorularda model gerçek bir cevap üretmiş ve
+  gösterdiği kaynaklar arasında `expected_source_doc` var mı?
+- **No Hallucination Rate** (≥ %80): Negatif sorularda model `NO_ANSWER` mı döndürüyor?
+- **Answer Completeness**: manuel; `answer_results.json` içindeki cevap metinleri ve
+  anahtar-kelime örtüşmesi ipucu üzerinden değerlendirilir.
+
+> Önkoşul: dört örnek PDF `--user` hesabıyla yüklü ve `ready`, ayrıca LM Studio
+> local server açık olmalı.
 
 ## Pozitif ve negatif sorular
 
