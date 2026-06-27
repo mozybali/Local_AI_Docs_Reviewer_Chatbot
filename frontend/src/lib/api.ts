@@ -14,6 +14,25 @@ export class ApiError extends Error {
   }
 }
 
+// Oturum süresi dolduğunda (kimlikli bir istek 401 dönerse) çağrılacak global
+// kanca. `AuthContext` burayı `logout` ile doldurur; böylece token geçersizse
+// kullanıcı otomatik olarak çıkış yaptırılıp giriş ekranına yönlendirilir.
+let unauthorizedHandler: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  unauthorizedHandler = handler;
+}
+
+/**
+ * Bir hatadan kullanıcıya gösterilecek anlaşılır bir mesaj üretir.
+ * - `ApiError` ise backend'in döndürdüğü (zaten Türkçe) mesajı kullanır.
+ * - Aksi halde verilen `fallback` mesajına düşer.
+ */
+export function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) return err.message;
+  return fallback;
+}
+
 interface RequestOptions {
   method?: string;
   token?: string | null;
@@ -66,6 +85,11 @@ export async function apiFetch<T>(
   }
 
   if (!res.ok) {
+    // Kimlikli bir istek 401 dönerse token geçersiz/expired demektir:
+    // oturumu kapat (handler ProtectedRoute üzerinden login'e yönlendirir).
+    if (res.status === 401 && token) {
+      unauthorizedHandler?.();
+    }
     throw new ApiError(res.status, await parseError(res));
   }
 

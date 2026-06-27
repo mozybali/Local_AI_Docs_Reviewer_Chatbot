@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
-import { ApiError, apiFetch } from "../lib/api";
+import { apiFetch, getErrorMessage } from "../lib/api";
 import StatusBadge from "./StatusBadge";
+import Spinner from "./Spinner";
 
 // --- Tipler --------------------------------------------------------------
 
@@ -100,9 +101,7 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
       setStats(s);
       setError(null);
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Yönetim verileri yüklenemedi.",
-      );
+      setError(getErrorMessage(err, "Yönetim verileri yüklenemedi."));
     } finally {
       setLoading(false);
     }
@@ -125,9 +124,7 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
       // İstatistik kartları (ör. "Aktif Kullanıcı") kaymasın diye yenile.
       void load();
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Kullanıcı güncellenemedi.",
-      );
+      setError(getErrorMessage(err, "Kullanıcı güncellenemedi."));
     } finally {
       setBusyUserId(null);
     }
@@ -152,20 +149,45 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
       // İstatistik sayıları kaymasın diye yenile.
       void load();
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Doküman silinemedi.",
-      );
+      setError(getErrorMessage(err, "Doküman silinemedi."));
     } finally {
       setDeletingDocId(null);
     }
   }
 
   if (loading) {
-    return <p style={{ color: "#94a3b8" }}>Yükleniyor...</p>;
+    return (
+      <p
+        style={{
+          color: "#94a3b8",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+        }}
+      >
+        <Spinner /> Yükleniyor...
+      </p>
+    );
   }
 
   return (
-    <div>
+    <div className="ld-fade-in">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: "1rem",
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => void load()}
+          style={{ ...smallButton }}
+        >
+          Yenile
+        </button>
+      </div>
+
       {error && (
         <div
           style={{
@@ -176,6 +198,7 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
             marginBottom: "1rem",
             fontSize: "0.85rem",
           }}
+          role="alert"
         >
           {error}
         </div>

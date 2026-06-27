@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ApiError, apiFetch } from "../lib/api";
+import { apiFetch, getErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { ui } from "../lib/ui";
 import ProtectedRoute from "../components/ProtectedRoute";
+import Header from "../components/Header";
+import Spinner from "../components/Spinner";
 import DocumentList, { type DocumentItem } from "../components/DocumentList";
 
 const PENDING_STATUSES = ["uploaded", "processing"];
 
 function DocumentsContent() {
-  const { user, token, logout } = useAuth();
+  const { token } = useAuth();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,11 +23,7 @@ function DocumentsContent() {
       setDocuments(data);
       setError(null);
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Dokümanlar yüklenemedi.",
-      );
+      setError(getErrorMessage(err, "Dokümanlar yüklenemedi."));
     } finally {
       setLoading(false);
     }
@@ -55,142 +54,98 @@ function DocumentsContent() {
       await apiFetch<void>(`/documents/${id}`, { method: "DELETE", token });
       setDocuments((prev) => prev.filter((d) => d.id !== id));
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Doküman silinemedi.",
-      );
+      setError(getErrorMessage(err, "Doküman silinemedi."));
     } finally {
       setDeletingId(null);
     }
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        padding: "2rem 1.5rem",
-        display: "flex",
-        justifyContent: "center",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 760,
-          background: "#1e293b",
-          border: "1px solid #334155",
-          borderRadius: 12,
-          padding: "2rem",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-        }}
-      >
+    <div style={ui.contentPage}>
+      <Header />
+      <main style={ui.contentBody} className="ld-page">
         <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1rem",
-          }}
+          style={{ ...ui.panel, maxWidth: 820 }}
+          className="ld-card ld-fade-in"
         >
-          <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-            {user?.email}
-          </span>
-          <button
-            type="button"
-            onClick={logout}
-            style={{
-              background: "transparent",
-              color: "#f87171",
-              border: "1px solid #7f1d1d",
-              borderRadius: 8,
-              padding: "0.3rem 0.7rem",
-              cursor: "pointer",
-              fontSize: "0.8rem",
-            }}
-          >
-            Çıkış
-          </button>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1.25rem",
-          }}
-        >
-          <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Dokümanlarım</h1>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <Link href="/chat">
-              <button
-                style={{
-                  background: "transparent",
-                  color: "#60a5fa",
-                  border: "1px solid #334155",
-                  borderRadius: 8,
-                  padding: "0.5rem 1rem",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                }}
-              >
-                Sohbet
-              </button>
-            </Link>
-            <Link href="/upload">
-              <button
-                style={{
-                  background: "#2563eb",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "0.5rem 1rem",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                }}
-              >
-                + Yükle
-              </button>
-            </Link>
-          </div>
-        </div>
-
-        {error && (
           <div
             style={{
-              background: "#7f1d1d",
-              color: "#fecaca",
-              padding: "0.6rem 0.75rem",
-              borderRadius: 8,
-              marginBottom: "1rem",
-              fontSize: "0.85rem",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "0.5rem",
+              flexWrap: "wrap",
+              marginBottom: "1.25rem",
             }}
           >
-            {error}
+            <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Dokümanlarım</h1>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                type="button"
+                onClick={() => void load()}
+                disabled={loading}
+                style={{
+                  background: "transparent",
+                  color: "#94a3b8",
+                  border: "1px solid #334155",
+                  borderRadius: 8,
+                  padding: "0.5rem 0.9rem",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                }}
+              >
+                {hasPending && <Spinner size={13} />}
+                Yenile
+              </button>
+              <Link href="/upload">
+                <button
+                  style={{
+                    background: "#2563eb",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "0.5rem 1rem",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  + Yükle
+                </button>
+              </Link>
+            </div>
           </div>
-        )}
 
-        {loading ? (
-          <p style={{ color: "#94a3b8" }}>Yükleniyor...</p>
-        ) : (
-          <DocumentList
-            documents={documents}
-            onDelete={handleDelete}
-            deletingId={deletingId}
-          />
-        )}
+          {error && (
+            <div style={ui.error} className="ld-fade-in" role="alert">
+              {error}
+            </div>
+          )}
 
-        <p
-          style={{
-            marginTop: "1.5rem",
-            fontSize: "0.85rem",
-            color: "#94a3b8",
-          }}
-        >
-          <Link href="/">Ana sayfa</Link>
-        </p>
-      </div>
+          {loading ? (
+            <p
+              style={{
+                color: "#94a3b8",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
+              <Spinner /> Yükleniyor...
+            </p>
+          ) : (
+            <DocumentList
+              documents={documents}
+              onDelete={handleDelete}
+              deletingId={deletingId}
+            />
+          )}
+        </div>
+      </main>
     </div>
   );
 }

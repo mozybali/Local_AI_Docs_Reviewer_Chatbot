@@ -1,20 +1,41 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
 import { ui } from "../lib/ui";
+import Spinner from "../components/Spinner";
 
 export default function HomePage() {
   const { user, isAuthenticated, loading, logout } = useAuth();
+  const router = useRouter();
+  // ProtectedRoute, yetkisiz bir sayfadan (ör. /admin) buraya yönlendirdiğinde
+  // `?denied=admin` ekler; kullanıcı neden ana sayfaya düştüğünü görsün.
+  const accessDenied = router.query.denied === "admin";
 
   return (
-    <div style={ui.page}>
-      <div style={ui.card}>
+    <div style={ui.page} className="ld-page">
+      <div style={ui.card} className="ld-card ld-fade-in">
         <h1 style={ui.title}>LocalDoc AI</h1>
         <p style={ui.subtitle}>
           Lokal AI destekli doküman soru-cevap sistemi.
         </p>
 
+        {accessDenied && (
+          <div style={ui.error} className="ld-fade-in" role="alert">
+            Bu sayfaya erişim yetkiniz yok; ana sayfaya yönlendirildiniz.
+          </div>
+        )}
+
         {loading ? (
-          <p style={{ color: "#94a3b8" }}>Yükleniyor...</p>
+          <p
+            style={{
+              color: "#94a3b8",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <Spinner /> Yükleniyor...
+          </p>
         ) : isAuthenticated ? (
           <>
             <p style={{ marginBottom: "1rem" }}>

@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
 import { ui } from "../lib/ui";
+import Spinner from "./Spinner";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -30,14 +31,26 @@ export default function ProtectedRoute({
     if (!isAuthenticated) {
       router.replace("/login");
     } else if (adminOnly && !isAdmin) {
-      router.replace("/");
+      // Giriş yapmış ama yetkisi olmayan kullanıcıyı login'e değil ana sayfaya
+      // yönlendiriyoruz; `denied` parametresi ana sayfada neden döndüğünü
+      // açıklayan bir bilgilendirme göstermek için kullanılır.
+      router.replace({ pathname: "/", query: { denied: "admin" } });
     }
   }, [loading, isAuthenticated, adminOnly, isAdmin, router]);
 
   if (loading || !allowed) {
     return (
-      <div style={ui.page}>
-        <p style={{ color: "#94a3b8" }}>Yükleniyor...</p>
+      <div style={ui.page} className="ld-page">
+        <p
+          style={{
+            color: "#94a3b8",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
+        >
+          <Spinner /> Yükleniyor...
+        </p>
       </div>
     );
   }

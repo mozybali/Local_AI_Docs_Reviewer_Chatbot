@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { apiFetch } from "../lib/api";
+import { apiFetch, setUnauthorizedHandler } from "../lib/api";
 
 export interface User {
   id: number;
@@ -99,6 +99,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUser(null);
   }, []);
+
+  // Token süresi dolduğunda (kimlikli istek 401 dönerse) otomatik çıkış.
+  // Oturum kapanınca korumalı sayfalar kullanıcıyı giriş ekranına yönlendirir.
+  useEffect(() => {
+    setUnauthorizedHandler(logout);
+    return () => setUnauthorizedHandler(null);
+  }, [logout]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

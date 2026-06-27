@@ -2,8 +2,9 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
-import { ApiError } from "../lib/api";
+import { getErrorMessage } from "../lib/api";
 import { ui } from "../lib/ui";
+import Spinner from "../components/Spinner";
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -27,21 +28,23 @@ export default function RegisterPage() {
       await register(email, password);
       await router.push("/upload");
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Kayıt sırasında bir hata oluştu.",
-      );
+      setError(getErrorMessage(err, "Kayıt sırasında bir hata oluştu."));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div style={ui.page}>
-      <form style={ui.card} onSubmit={handleSubmit}>
+    <div style={ui.page} className="ld-page">
+      <form style={ui.card} className="ld-card ld-fade-in" onSubmit={handleSubmit}>
         <h1 style={ui.title}>Kayıt Ol</h1>
         <p style={ui.subtitle}>Yeni bir LocalDoc AI hesabı oluşturun.</p>
 
-        {error && <div style={ui.error}>{error}</div>}
+        {error && (
+          <div style={ui.error} className="ld-fade-in" role="alert">
+            {error}
+          </div>
+        )}
 
         <label style={ui.label} htmlFor="email">
           E-posta
@@ -75,9 +78,14 @@ export default function RegisterPage() {
           style={{
             ...ui.button,
             ...(submitting ? ui.buttonDisabled : {}),
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.5rem",
           }}
           disabled={submitting}
         >
+          {submitting && <Spinner size={16} color="#fff" />}
           {submitting ? "Kayıt olunuyor..." : "Kayıt Ol"}
         </button>
 

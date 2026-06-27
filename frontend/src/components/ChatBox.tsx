@@ -66,11 +66,7 @@ export default function ChatBox({
           <MessageBubble key={index} message={message} />
         ))}
 
-        {loading && (
-          <div style={{ alignSelf: "flex-start", color: "#94a3b8", fontSize: "0.85rem" }}>
-            Asistan yazıyor…
-          </div>
-        )}
+        {loading && <TypingIndicator />}
         <div ref={endRef} />
       </div>
 
@@ -119,10 +115,46 @@ export default function ChatBox({
   );
 }
 
+// Asistanın cevabı beklenirken gösterilen yanıp sönen üç nokta.
+function TypingIndicator() {
+  return (
+    <div
+      className="ld-fade-in"
+      style={{
+        alignSelf: "flex-start",
+        display: "flex",
+        alignItems: "center",
+        gap: "0.3rem",
+        background: "#1e293b",
+        border: "1px solid #334155",
+        borderRadius: 12,
+        padding: "0.7rem 0.85rem",
+      }}
+      aria-label="Asistan yazıyor"
+    >
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: "50%",
+            background: "#94a3b8",
+            display: "inline-block",
+            animation: "ld-blink 1.2s infinite both",
+            animationDelay: `${i * 0.18}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
   return (
     <div
+      className="ld-fade-in"
       style={{
         alignSelf: isUser ? "flex-end" : "flex-start",
         maxWidth: "85%",

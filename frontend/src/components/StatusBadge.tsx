@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Spinner from "./Spinner";
 
 export type DocumentStatus = "uploaded" | "processing" | "ready" | "error";
 
@@ -18,11 +19,17 @@ const STATUS_META: Record<DocumentStatus, StatusMeta> = {
 
 const FALLBACK: StatusMeta = { label: "Bilinmiyor", bg: "#334155", color: "#e2e8f0" };
 
+// Devam eden (animasyonla vurgulanan) durumlar.
+const ACTIVE_STATUSES: DocumentStatus[] = ["uploaded", "processing"];
+
 export default function StatusBadge({ status }: { status: string }) {
   const meta = STATUS_META[status as DocumentStatus] ?? FALLBACK;
+  const isActive = ACTIVE_STATUSES.includes(status as DocumentStatus);
 
   const style: CSSProperties = {
-    display: "inline-block",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.35rem",
     padding: "0.15rem 0.6rem",
     borderRadius: 999,
     fontSize: "0.75rem",
@@ -30,7 +37,16 @@ export default function StatusBadge({ status }: { status: string }) {
     background: meta.bg,
     color: meta.color,
     whiteSpace: "nowrap",
+    // İşleniyor/yüklendi durumlarında hafif nabız efekti.
+    animation: isActive ? "ld-pulse 1.5s ease-in-out infinite" : undefined,
   };
 
-  return <span style={style}>{meta.label}</span>;
+  return (
+    <span style={style}>
+      {status === "processing" && (
+        <Spinner size={11} thickness={2} color={meta.color} />
+      )}
+      {meta.label}
+    </span>
+  );
 }

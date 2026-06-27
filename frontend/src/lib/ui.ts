@@ -80,4 +80,24 @@ export const ui: Record<string, CSSProperties> = {
     fontSize: "0.85rem",
     color: "#94a3b8",
   },
+  // --- İçerik sayfaları (Header + geniş panel) için paylaşılan düzen ---
+  contentPage: {
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+  },
+  contentBody: {
+    flex: 1,
+    padding: "1.5rem 1.25rem",
+    display: "flex",
+    justifyContent: "center",
+  },
+  panel: {
+    width: "100%",
+    background: "#1e293b",
+    border: "1px solid #334155",
+    borderRadius: 12,
+    padding: "2rem",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+  },
 };
