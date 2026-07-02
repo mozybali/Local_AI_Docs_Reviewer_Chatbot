@@ -12,9 +12,20 @@ from jose import JWTError, jwt
 
 from app.config import settings
 
-# bcrypt yalnızca ilk 72 byte'ı kullanır; 5.0+ sürümü daha uzun parolada
-# hata fırlattığı için şifreyi byte düzeyinde 72'ye kırpıyoruz.
+# bcrypt yalnızca ilk 72 byte'ı kullanır. Sessiz kırpma (truncate), kullanıcının
+# sandığından daha kısa bir parolayla hash üretilmesine yol açar; bu yüzden yeni
+# parolalar hash'lenirken 72 byte üstü REDDEDİLİR. Doğrulama tarafında ise eski
+# (kırpılarak hash'lenmiş) kayıtlarla uyumluluk için kırpma korunur.
 _BCRYPT_MAX_BYTES = 72
+
+PASSWORD_TOO_LONG_MESSAGE = (
+    f"Şifre en fazla {_BCRYPT_MAX_BYTES} byte olabilir "
+    "(Türkçe karakterler birden fazla byte sayılır)."
+)
+
+
+class PasswordPolicyError(ValueError):
+    """Parola politikasına aykırı girdi (örn. bcrypt 72 byte sınırı aşımı)."""
 
 
 def _to_bcrypt_bytes(password: str) -> bytes:
@@ -23,8 +34,14 @@ def _to_bcrypt_bytes(password: str) -> bytes:
 
 
 def hash_password(password: str) -> str:
-    """Düz metin şifreyi bcrypt ile hash'ler."""
-    hashed = bcrypt.hashpw(_to_bcrypt_bytes(password), bcrypt.gensalt())
+    """Düz metin şifreyi bcrypt ile hash'ler.
+
+    72 byte'tan uzun parolalar sessizce kırpılmaz; `PasswordPolicyError`
+    fırlatılır (router katmanı bunu 422'ye çevirir/şemada engeller).
+    """
+    if len(password.encode("utf-8")) > _BCRYPT_MAX_BYTES:
+        raise PasswordPolicyError(PASSWORD_TOO_LONG_MESSAGE)
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     return hashed.decode("utf-8")
 
 
@@ -84,4 +101,6 @@ __all__ = [
     "create_access_token",
     "decode_access_token",
     "JWTError",
+    "PasswordPolicyError",
+    "PASSWORD_TOO_LONG_MESSAGE",
 ]

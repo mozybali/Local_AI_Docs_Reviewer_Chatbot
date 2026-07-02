@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { AlertCircle, FileText, Plus, RefreshCw } from "lucide-react";
 import { apiFetch, getErrorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
-import { ui } from "../lib/ui";
+import { glass as g, tokens as t, ui } from "../lib/ui";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Header from "../components/Header";
 import Spinner from "../components/Spinner";
@@ -17,16 +18,18 @@ function DocumentsContent() {
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const load = useCallback(async () => {
-    try {
-      const data = await apiFetch<DocumentItem[]>("/documents", { token });
-      setDocuments(data);
-      setError(null);
-    } catch (err) {
-      setError(getErrorMessage(err, "Dokümanlar yüklenemedi."));
-    } finally {
-      setLoading(false);
-    }
+  // setState'ler promise callback'lerinde çalışır; böylece efekt gövdesinden
+  // doğrudan çağrılabilir (react-hooks/set-state-in-effect).
+  const load = useCallback(() => {
+    return apiFetch<DocumentItem[]>("/documents", { token })
+      .then((data) => {
+        setDocuments(data);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        setError(getErrorMessage(err, "Dokümanlar yüklenemedi."));
+      })
+      .finally(() => setLoading(false));
   }, [token]);
 
   // İlk yükleme.
@@ -65,71 +68,77 @@ function DocumentsContent() {
       <Header />
       <main style={ui.contentBody} className="ld-page">
         <div
-          style={{ ...ui.panel, maxWidth: 820 }}
-          className="ld-card ld-fade-in"
+          style={{ ...ui.panel, maxWidth: 860 }}
+          className="ld-card ld-glass ld-fade-up"
         >
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
-              gap: "0.5rem",
+              alignItems: "flex-start",
+              gap: "0.75rem",
               flexWrap: "wrap",
               marginBottom: "1.25rem",
             }}
           >
-            <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Dokümanlarım</h1>
+            <div>
+              <h1 style={ui.pageTitle}>
+                <span style={{ ...g.iconWrap, width: 34, height: 34 }}>
+                  <FileText size={16} />
+                </span>
+                Dokümanlarım
+              </h1>
+              <p style={ui.pageSubtitle}>
+                {loading
+                  ? "Dokümanlar getiriliyor..."
+                  : `${documents.length} doküman · işlenenler otomatik yenilenir`}
+              </p>
+            </div>
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <button
                 type="button"
                 onClick={() => void load()}
                 disabled={loading}
+                className="ld-btn"
                 style={{
-                  background: "transparent",
-                  color: "#94a3b8",
-                  border: "1px solid #334155",
-                  borderRadius: 8,
+                  ...g.ghostButton,
                   padding: "0.5rem 0.9rem",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  fontWeight: 600,
                   fontSize: "0.85rem",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
+                  ...(loading ? { opacity: 0.55, cursor: "not-allowed" } : {}),
                 }}
               >
-                {hasPending && <Spinner size={13} />}
+                <RefreshCw
+                  size={14}
+                  style={
+                    hasPending
+                      ? { animation: "ld-spin 1.2s linear infinite" }
+                      : undefined
+                  }
+                />
                 Yenile
               </button>
-              <Link href="/upload">
-                <button
-                  style={{
-                    background: "#2563eb",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "0.5rem 1rem",
-                    cursor: "pointer",
-                    fontWeight: 600,
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  + Yükle
-                </button>
+              <Link
+                href="/upload"
+                className="ld-btn"
+                style={{ ...g.glassButton, padding: "0.5rem 1rem", fontSize: "0.85rem" }}
+              >
+                <Plus size={15} />
+                Yükle
               </Link>
             </div>
           </div>
 
           {error && (
             <div style={ui.error} className="ld-fade-in" role="alert">
-              {error}
+              <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+              <span>{error}</span>
             </div>
           )}
 
           {loading ? (
             <p
               style={{
-                color: "#94a3b8",
+                color: t.color.muted,
                 display: "flex",
                 alignItems: "center",
                 gap: "0.5rem",

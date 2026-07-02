@@ -5,12 +5,29 @@ Değerler `.env.example` dosyasındaki anahtarlarla birebir eşleşir.
 """
 
 from functools import lru_cache
+from urllib.parse import urlparse
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Güvensiz (placeholder) secret değerleri: `.env.example` ile birebir aynı
+# bırakılmış kurulumları yakalamak için kullanılır.
+_INSECURE_JWT_SECRETS = {"", "degistir_bu_degeri_uretimde", "secret", "changeme"}
+_INSECURE_ADMIN_PASSWORDS = {"", "degistir_beni", "admin", "changeme"}
+
+# Yalnızca simetrik HMAC ailesine izin verilir. `none` veya asimetrik/karışık
+# algoritmalara izin vermek, tek secret'lı bu kurulumda imza doğrulamasını
+# zayıflatabilir (alg confusion).
+_ALLOWED_JWT_ALGORITHMS = {"HS256", "HS384", "HS512"}
+
+_LOCAL_HOSTNAMES = {"localhost", "127.0.0.1", "::1", "0.0.0.0"}
 
 
 class Settings(BaseSettings):
     """`.env` dosyasından okunan uygulama ayarları."""
+
+    # Ortam: "development" veya "production". Production'da güvensiz varsayılan
+    # secret'larla başlatma reddedilir ve OpenAPI/docs kapatılır.
+    ENVIRONMENT: str = "development"
 
     # Dosya yükleme
     UPLOAD_DIR: str = "uploads"
@@ -68,6 +85,13 @@ class Settings(BaseSettings):
     # İstemciler (CORS)
     FRONTEND_ORIGIN: str = "http://localhost:3000"
 
+    # Brute-force koruması (login/register): sabit pencere içinde izin verilen
+    # deneme sayısı. Login limiti yalnızca BAŞARISIZ denemeleri sayar.
+    LOGIN_RATE_LIMIT_ATTEMPTS: int = 5
+    LOGIN_RATE_LIMIT_WINDOW_SECONDS: int = 300
+    REGISTER_RATE_LIMIT_ATTEMPTS: int = 20
+    REGISTER_RATE_LIMIT_WINDOW_SECONDS: int = 3600
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -88,6 +112,59 @@ class Settings(BaseSettings):
     def max_file_size_bytes(self) -> int:
         """Maksimum dosya boyutunu byte cinsinden döner."""
         return self.MAX_FILE_SIZE_MB * 1024 * 1024
+
+    @property
+    def is_production(self) -> bool:
+        """Ortamın production olup olmadığını döner."""
+        return self.ENVIRONMENT.strip().lower() in {"production", "prod"}
+
+
+def validate_security_settings(s: "Settings") -> list[str]:
+    """Güvenlik açısından kritik ayarları denetler.
+
+    - `JWT_ALGORITHM` izin verilen HMAC algoritmalarından biri değilse her
+      ortamda `RuntimeError` fırlatır (imzasız/alg-confusion token riskine
+      karşı asla tolere edilmez).
+    - `JWT_SECRET_KEY` veya `DEFAULT_ADMIN_PASSWORD` placeholder değerde
+      bırakılmışsa: development'ta uyarı listesi döner (çağıran loglar),
+      production'da `RuntimeError` fırlatır (uygulama başlatılmaz).
+    - `LLM_API_URL` lokal olmayan bir hosta işaret ediyorsa uyarı üretir
+      (doküman içeriği dış servise gider; bilinçli bir tercih olmalıdır).
+    """
+    if s.JWT_ALGORITHM not in _ALLOWED_JWT_ALGORITHMS:
+        raise RuntimeError(
+            "Geçersiz JWT_ALGORITHM: "
+            f"{s.JWT_ALGORITHM!r}. İzin verilenler: "
+            f"{', '.join(sorted(_ALLOWED_JWT_ALGORITHMS))}."
+        )
+
+    problems: list[str] = []
+    if s.JWT_SECRET_KEY in _INSECURE_JWT_SECRETS or len(s.JWT_SECRET_KEY) < 16:
+        problems.append(
+            "JWT_SECRET_KEY varsayılan/zayıf bırakılmış. Güçlü ve gizli bir "
+            "değerle değiştirin (örn. `openssl rand -hex 32`)."
+        )
+    if s.DEFAULT_ADMIN_PASSWORD in _INSECURE_ADMIN_PASSWORDS:
+        problems.append(
+            "DEFAULT_ADMIN_PASSWORD varsayılan bırakılmış. İlk kurulumdan "
+            "önce .env içinde güçlü bir değerle değiştirin."
+        )
+
+    if s.is_production and problems:
+        raise RuntimeError(
+            "Production ortamında güvensiz konfigürasyonla başlatma reddedildi: "
+            + " | ".join(problems)
+        )
+
+    warnings = list(problems)
+    llm_host = urlparse(s.LLM_API_URL).hostname
+    if llm_host and llm_host.lower() not in _LOCAL_HOSTNAMES:
+        warnings.append(
+            f"LLM_API_URL lokal olmayan bir hosta işaret ediyor: {llm_host}. "
+            "Doküman içeriği bu hosta gönderilecektir; bunun bilinçli bir "
+            "tercih olduğundan emin olun."
+        )
+    return warnings
 
 
 @lru_cache

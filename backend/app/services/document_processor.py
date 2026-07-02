@@ -28,6 +28,8 @@ from __future__ import annotations
 
 import logging
 
+from sqlalchemy import select
+
 from app.database import SessionLocal
 from app.models.chunk import Chunk
 from app.models.document import Document
@@ -115,7 +117,25 @@ def process_document(document_id: int) -> None:
             vector_store.delete_by_document(document.id)
             vector_store.add_vectors(records)
 
-            # 3) Her iki depo da tutarlı: ancak şimdi "ready".
+            # 3) Yarış durumu koruması: uzun süren embedding/vektör adımları
+            #    sırasında doküman kullanıcı/admin tarafından silinmiş olabilir.
+            #    Silinmişse az önce yazdığımız vektörler yetimdir; "ready"
+            #    yapmadan temizleyip çıkarız (retrieval zaten PG'de karşılığı
+            #    olmayan vektörleri eler, bu adım depoyu da temiz tutar).
+            #    Kimlik haritasını atlamak için saf kolon sorgusu kullanılır.
+            still_exists = db.execute(
+                select(Document.id).where(Document.id == document_id)
+            ).scalar_one_or_none()
+            if still_exists is None:
+                logger.info(
+                    "Doküman işleme sırasında silinmiş; vektörler temizleniyor: "
+                    "id=%s",
+                    document_id,
+                )
+                vector_store.delete_by_document(document_id)
+                return
+
+            # 4) Her iki depo da tutarlı: ancak şimdi "ready".
             document.status = "ready"
             document.error_msg = None
             db.commit()

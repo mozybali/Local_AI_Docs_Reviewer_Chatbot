@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { AlertCircle, LogIn } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getErrorMessage } from "../lib/api";
 import { ui } from "../lib/ui";
 import Spinner from "../components/Spinner";
+import AuthLayout from "../components/AuthLayout";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -29,14 +31,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={ui.page} className="ld-page">
-      <form style={ui.card} className="ld-card ld-fade-in" onSubmit={handleSubmit}>
+    <AuthLayout>
+      <form
+        style={{ ...ui.card, maxWidth: "none" }}
+        className="ld-card ld-glass ld-fade-up"
+        onSubmit={handleSubmit}
+      >
         <h1 style={ui.title}>Giriş Yap</h1>
         <p style={ui.subtitle}>LocalDoc AI hesabınıza erişin.</p>
 
         {error && (
           <div style={ui.error} className="ld-fade-in" role="alert">
-            {error}
+            <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>{error}</span>
           </div>
         )}
 
@@ -51,6 +58,7 @@ export default function LoginPage() {
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
+          placeholder="ornek@eposta.com"
         />
 
         <label style={ui.label} htmlFor="password">
@@ -64,21 +72,19 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="current-password"
+          placeholder="••••••••"
         />
 
         <button
           type="submit"
+          className="ld-btn"
           style={{
             ...ui.button,
             ...(submitting ? ui.buttonDisabled : {}),
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "0.5rem",
           }}
           disabled={submitting}
         >
-          {submitting && <Spinner size={16} color="#fff" />}
+          {submitting ? <Spinner size={16} color="#fff" /> : <LogIn size={16} />}
           {submitting ? "Giriş yapılıyor..." : "Giriş Yap"}
         </button>
 
@@ -86,6 +92,6 @@ export default function LoginPage() {
           Hesabın yok mu? <Link href="/register">Kayıt ol</Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

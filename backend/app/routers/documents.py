@@ -35,7 +35,11 @@ from app.services import file_service
 from app.services.document_processor import process_document
 from app.services.document_service import delete_document_fully
 from app.utils.dependencies import get_current_user
-from app.utils.file_validation import FileValidationError, validate_upload
+from app.utils.file_validation import (
+    FileValidationError,
+    read_upload_limited,
+    validate_upload,
+)
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -98,10 +102,10 @@ def upload_document(
     Yanıt, işleme tamamlanmadan `202 Accepted` döner; ilerleme durum
     endpoint'i ile takip edilir.
     """
-    content = file.file.read()
-
-    # 1) Doğrulama (uzantı, boyut, MIME, boş dosya)
+    # 1) Doğrulama: boyut sınırı okuma sırasında uygulanır (tamamı belleğe
+    #    alınmadan), ardından uzantı/MIME/boş dosya kontrolleri yapılır.
     try:
+        content = read_upload_limited(file.file)
         ext = validate_upload(file.filename or "", content)
     except FileValidationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail)

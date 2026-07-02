@@ -22,6 +22,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.config import settings
 from app.database import Base, get_db
 from app.models.document import Document
 from app.models.user import User
@@ -166,3 +167,54 @@ def test_missing_document_returns_404(client):
 
 def test_passive_user_returns_403(client):
     assert client.get("/documents", headers=_auth(3)).status_code == 403
+
+
+# --- Upload doğrulama (auth + dosya güvenliği) ----------------------------
+
+
+def test_upload_without_token_returns_401(client):
+    res = client.post(
+        "/documents/upload",
+        files={"file": ("a.pdf", b"%PDF-1.7 icerik", "application/pdf")},
+    )
+    assert res.status_code == 401
+
+
+def test_upload_invalid_magic_byte_returns_415(client):
+    # Uzantı .pdf ama içerik PDF imzası taşımıyor -> reddedilir.
+    res = client.post(
+        "/documents/upload",
+        files={"file": ("sahte.pdf", b"MZ\x90\x00 exe icerigi", "application/pdf")},
+        headers=_auth(1),
+    )
+    assert res.status_code == 415
+
+
+def test_upload_empty_file_returns_400(client):
+    res = client.post(
+        "/documents/upload",
+        files={"file": ("bos.pdf", b"", "application/pdf")},
+        headers=_auth(1),
+    )
+    assert res.status_code == 400
+
+
+def test_upload_unsupported_extension_returns_415(client):
+    res = client.post(
+        "/documents/upload",
+        files={"file": ("zararli.exe", b"MZ\x90\x00", "application/octet-stream")},
+        headers=_auth(1),
+    )
+    assert res.status_code == 415
+
+
+def test_upload_oversized_file_returns_413(client, monkeypatch):
+    # Boyut sınırı, içerik okunurken uygulanır (tamamı belleğe alınmadan).
+    monkeypatch.setattr(settings, "MAX_FILE_SIZE_MB", 1)
+    oversized = b"%PDF-1.7" + b"0" * (1024 * 1024 + 1)
+    res = client.post(
+        "/documents/upload",
+        files={"file": ("buyuk.pdf", oversized, "application/pdf")},
+        headers=_auth(1),
+    )
+    assert res.status_code == 413

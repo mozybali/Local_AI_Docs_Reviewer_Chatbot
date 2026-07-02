@@ -18,6 +18,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
+from app.models.document import Document
 from app.models.user import User
 from app.routers import chat
 from app.services import llm_service, retrieval_service
@@ -31,7 +32,8 @@ from app.utils.security import create_access_token, hash_password
 def client():
     """Yalnızca `chat` router'ını içeren izole test uygulaması.
 
-    İki kullanıcı seed edilir: id=1 aktif, id=2 pasif.
+    İki kullanıcı seed edilir: id=1 aktif, id=2 pasif. Kullanıcı 2'nin `ready`
+    bir dokümanı (id=30) vardır (çapraz kullanıcı izolasyon testleri için).
     """
     engine = create_engine(
         "sqlite://",
@@ -48,6 +50,8 @@ def client():
              role="user", is_active=True),
         User(id=2, email="u2@x.com", hashed_password=hash_password("x"),
              role="user", is_active=False),
+        Document(id=30, user_id=2, filename="s30", original_filename="gizli.pdf",
+                 file_type="pdf", file_path="/uploads/s30.pdf", status="ready"),
     ])
     seed.commit()
     seed.close()
@@ -201,3 +205,39 @@ def test_ask_embedding_error_returns_503(client, monkeypatch):
     monkeypatch.setattr(retrieval_service, "search_chunks", boom)
     res = client.post("/chat/ask", json={"question": "soru"}, headers=_auth(1))
     assert res.status_code == 503
+
+
+# --- Çapraz kullanıcı izolasyonu ------------------------------------------
+
+
+def test_ask_ignores_other_users_document_ids(client, monkeypatch):
+    # Kullanıcı 1, kullanıcı 2'nin dokümanını (id=30) `document_ids` ile istese
+    # bile sahiplik süzgeci boş kapsam üretir: vektör araması ve LLM çağrısı
+    # HİÇ yapılmaz; standart "bulunamadı" cevabı ve boş kaynak listesi döner.
+    monkeypatch.setattr(
+        retrieval_service.embedding_service, "embed_query", lambda q: [0.1, 0.2]
+    )
+    called = {"vector_search": False, "llm": False}
+
+    def fake_vector_search(**kwargs):
+        called["vector_search"] = True
+        return []
+
+    def fake_http_post(path, payload):
+        called["llm"] = True
+        raise AssertionError("LLM çağrılmamalıydı")
+
+    monkeypatch.setattr(retrieval_service.vector_store, "search", fake_vector_search)
+    monkeypatch.setattr(llm_service, "_http_post", fake_http_post)
+
+    res = client.post(
+        "/chat/ask",
+        json={"question": "gizli dokümanda ne yazıyor?", "document_ids": [30]},
+        headers=_auth(1),
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["answer"] == NO_ANSWER
+    assert body["sources"] == []
+    assert called["vector_search"] is False
+    assert called["llm"] is False

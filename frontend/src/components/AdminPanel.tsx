@@ -1,5 +1,18 @@
-import { useCallback, useEffect, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useState, type ComponentType } from "react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Files,
+  RefreshCw,
+  ShieldCheck,
+  ShieldOff,
+  Trash2,
+  UserCheck,
+  UserX,
+  Users,
+} from "lucide-react";
 import { apiFetch, getErrorMessage } from "../lib/api";
+import { glass as g, tokens as t, ui } from "../lib/ui";
 import StatusBadge from "./StatusBadge";
 import Spinner from "./Spinner";
 
@@ -36,40 +49,7 @@ interface AdminPanelProps {
   currentUserId: number | undefined;
 }
 
-// --- Stiller -------------------------------------------------------------
-
-const cell: CSSProperties = {
-  padding: "0.6rem 0.5rem",
-  borderBottom: "1px solid #334155",
-  textAlign: "left",
-  verticalAlign: "top",
-  fontSize: "0.85rem",
-};
-
-const headCell: CSSProperties = {
-  ...cell,
-  color: "#94a3b8",
-  fontWeight: 600,
-  fontSize: "0.75rem",
-  textTransform: "uppercase",
-  letterSpacing: "0.03em",
-};
-
-const smallButton: CSSProperties = {
-  borderRadius: 8,
-  padding: "0.3rem 0.7rem",
-  cursor: "pointer",
-  fontSize: "0.8rem",
-  background: "transparent",
-  border: "1px solid #334155",
-  color: "#cbd5e1",
-};
-
-const dangerButton: CSSProperties = {
-  ...smallButton,
-  color: "#f87171",
-  border: "1px solid #7f1d1d",
-};
+type Icon = ComponentType<{ size?: number; strokeWidth?: number; color?: string }>;
 
 function formatDate(value: string): string {
   const date = new Date(value);
@@ -87,24 +67,27 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
   const [busyUserId, setBusyUserId] = useState<number | null>(null);
   const [deletingDocId, setDeletingDocId] = useState<number | null>(null);
 
-  const load = useCallback(async () => {
-    if (!token) return;
-    setLoading(true);
-    try {
-      const [u, d, s] = await Promise.all([
-        apiFetch<AdminUser[]>("/admin/users", { token }),
-        apiFetch<AdminDocument[]>("/admin/documents", { token }),
-        apiFetch<AdminStats>("/admin/stats", { token }),
-      ]);
-      setUsers(u);
-      setDocuments(d);
-      setStats(s);
-      setError(null);
-    } catch (err) {
-      setError(getErrorMessage(err, "Yönetim verileri yüklenemedi."));
-    } finally {
-      setLoading(false);
-    }
+  // setState'ler promise callback'lerinde çalışır; böylece efekt gövdesinden
+  // doğrudan çağrılabilir (react-hooks/set-state-in-effect). Mutasyon sonrası
+  // çağrılarda panel "Yükleniyor..." ekranına dönmez (sessiz tazeleme);
+  // yalnızca ilk yükleme ve Yenile butonu tam yükleme durumu gösterir.
+  const load = useCallback(() => {
+    if (!token) return Promise.resolve();
+    return Promise.all([
+      apiFetch<AdminUser[]>("/admin/users", { token }),
+      apiFetch<AdminDocument[]>("/admin/documents", { token }),
+      apiFetch<AdminStats>("/admin/stats", { token }),
+    ])
+      .then(([u, d, s]) => {
+        setUsers(u);
+        setDocuments(d);
+        setStats(s);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        setError(getErrorMessage(err, "Yönetim verileri yüklenemedi."));
+      })
+      .finally(() => setLoading(false));
   }, [token]);
 
   useEffect(() => {
@@ -159,7 +142,7 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
     return (
       <p
         style={{
-          color: "#94a3b8",
+          color: t.color.muted,
           display: "flex",
           alignItems: "center",
           gap: "0.5rem",
@@ -181,26 +164,22 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
       >
         <button
           type="button"
-          onClick={() => void load()}
-          style={{ ...smallButton }}
+          onClick={() => {
+            setLoading(true);
+            void load();
+          }}
+          className="ld-btn"
+          style={g.smallButton}
         >
+          <RefreshCw size={12} />
           Yenile
         </button>
       </div>
 
       {error && (
-        <div
-          style={{
-            background: "#7f1d1d",
-            color: "#fecaca",
-            padding: "0.6rem 0.75rem",
-            borderRadius: 8,
-            marginBottom: "1rem",
-            fontSize: "0.85rem",
-          }}
-          role="alert"
-        >
-          {error}
+        <div style={ui.error} role="alert">
+          <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>{error}</span>
         </div>
       )}
 
@@ -209,75 +188,106 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
             gap: "0.75rem",
             marginBottom: "2rem",
           }}
         >
-          <StatCard label="Kullanıcı" value={stats.total_users} />
-          <StatCard label="Aktif Kullanıcı" value={stats.active_users} />
-          <StatCard label="Doküman" value={stats.total_documents} />
+          <StatCard icon={Users} label="Kullanıcı" value={stats.total_users} />
           <StatCard
+            icon={UserCheck}
+            label="Aktif Kullanıcı"
+            value={stats.active_users}
+            accent={t.color.cyan}
+          />
+          <StatCard
+            icon={Files}
+            label="Doküman"
+            value={stats.total_documents}
+          />
+          <StatCard
+            icon={CheckCircle2}
             label="Hazır Doküman"
             value={stats.documents_by_status?.ready ?? 0}
+            accent={t.color.emerald}
           />
         </div>
       )}
 
       {/* Kullanıcılar */}
-      <h2 style={{ fontSize: "1.1rem", margin: "0 0 0.75rem" }}>Kullanıcılar</h2>
+      <h2 style={sectionHeading}>Kullanıcılar</h2>
       <div style={{ overflowX: "auto", marginBottom: "2rem" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <table style={{ width: "100%", minWidth: 640, borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th style={headCell}>E-posta</th>
-              <th style={headCell}>Rol</th>
-              <th style={headCell}>Durum</th>
-              <th style={{ ...headCell, textAlign: "right" }}>Doküman</th>
-              <th style={{ ...headCell, textAlign: "right" }}>İşlem</th>
+              <th style={g.tableHeadCell}>E-posta</th>
+              <th style={g.tableHeadCell}>Rol</th>
+              <th style={g.tableHeadCell}>Durum</th>
+              <th style={{ ...g.tableHeadCell, textAlign: "right" }}>Doküman</th>
+              <th style={{ ...g.tableHeadCell, textAlign: "right" }}>İşlem</th>
             </tr>
           </thead>
           <tbody>
             {users.map((user) => {
               const isSelf = user.id === currentUserId;
               const busy = busyUserId === user.id;
+              const actionDisabledStyle =
+                busy || isSelf ? { opacity: 0.5, cursor: "not-allowed" } : {};
               return (
                 <tr key={user.id}>
-                  <td style={cell}>
-                    <span style={{ wordBreak: "break-all" }}>{user.email}</span>
+                  <td style={g.tableCell}>
+                    <span style={{ wordBreak: "break-all", color: t.color.heading }}>
+                      {user.email}
+                    </span>
                     {isSelf && (
-                      <span style={{ color: "#64748b", fontSize: "0.75rem" }}>
+                      <span style={{ color: t.color.subtle, fontSize: "0.75rem" }}>
                         {" "}
                         (siz)
                       </span>
                     )}
                   </td>
-                  <td style={cell}>
+                  <td style={g.tableCell}>
                     <span
                       style={{
-                        color: user.role === "admin" ? "#fbbf24" : "#cbd5e1",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.35rem",
+                        color: user.role === "admin" ? t.color.amber : "#cbd5e1",
                         fontWeight: 600,
                       }}
                     >
+                      {user.role === "admin" && <ShieldCheck size={13} />}
                       {user.role}
                     </span>
                   </td>
-                  <td style={cell}>
+                  <td style={g.tableCell}>
                     <span
                       style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.35rem",
                         color: user.is_active ? "#86efac" : "#fca5a5",
                         fontSize: "0.8rem",
+                        fontWeight: 600,
                       }}
                     >
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          background: user.is_active ? t.color.emerald : t.color.danger,
+                        }}
+                      />
                       {user.is_active ? "Aktif" : "Pasif"}
                     </span>
                   </td>
-                  <td style={{ ...cell, textAlign: "right" }}>
+                  <td style={{ ...g.tableCell, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
                     {user.document_count}
                   </td>
                   <td
                     style={{
-                      ...cell,
+                      ...g.tableCell,
                       textAlign: "right",
                       whiteSpace: "nowrap",
                     }}
@@ -293,13 +303,18 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
                       title={
                         isSelf ? "Kendi rolünüzü değiştiremezsiniz." : undefined
                       }
+                      className="ld-btn"
                       style={{
-                        ...smallButton,
+                        ...g.smallButton,
                         marginRight: "0.4rem",
-                        opacity: busy || isSelf ? 0.5 : 1,
-                        cursor: busy || isSelf ? "not-allowed" : "pointer",
+                        ...actionDisabledStyle,
                       }}
                     >
+                      {user.role === "admin" ? (
+                        <ShieldOff size={12} />
+                      ) : (
+                        <ShieldCheck size={12} />
+                      )}
                       {user.role === "admin" ? "Admin'i kaldır" : "Admin yap"}
                     </button>
                     <button
@@ -313,12 +328,13 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
                           ? "Kendi hesabınızı pasifleştiremezsiniz."
                           : undefined
                       }
+                      className="ld-btn"
                       style={{
-                        ...(user.is_active ? dangerButton : smallButton),
-                        opacity: busy || isSelf ? 0.5 : 1,
-                        cursor: busy || isSelf ? "not-allowed" : "pointer",
+                        ...(user.is_active ? g.smallDangerButton : g.smallButton),
+                        ...actionDisabledStyle,
                       }}
                     >
+                      {user.is_active ? <UserX size={12} /> : <UserCheck size={12} />}
                       {user.is_active ? "Pasifleştir" : "Aktifleştir"}
                     </button>
                   </td>
@@ -330,31 +346,29 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
       </div>
 
       {/* Dokümanlar */}
-      <h2 style={{ fontSize: "1.1rem", margin: "0 0 0.75rem" }}>
-        Tüm Dokümanlar
-      </h2>
+      <h2 style={sectionHeading}>Tüm Dokümanlar</h2>
       <div style={{ overflowX: "auto" }}>
         {documents.length === 0 ? (
-          <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+          <p style={{ color: t.color.muted, fontSize: "0.9rem" }}>
             Sistemde doküman yok.
           </p>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table style={{ width: "100%", minWidth: 720, borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                <th style={headCell}>Dosya</th>
-                <th style={headCell}>Sahip</th>
-                <th style={headCell}>Tip</th>
-                <th style={headCell}>Durum</th>
-                <th style={headCell}>Yüklenme</th>
-                <th style={{ ...headCell, textAlign: "right" }}>İşlem</th>
+                <th style={g.tableHeadCell}>Dosya</th>
+                <th style={g.tableHeadCell}>Sahip</th>
+                <th style={g.tableHeadCell}>Tip</th>
+                <th style={g.tableHeadCell}>Durum</th>
+                <th style={g.tableHeadCell}>Yüklenme</th>
+                <th style={{ ...g.tableHeadCell, textAlign: "right" }}>İşlem</th>
               </tr>
             </thead>
             <tbody>
               {documents.map((doc) => (
                 <tr key={doc.id}>
-                  <td style={cell}>
-                    <span style={{ wordBreak: "break-all" }}>
+                  <td style={g.tableCell}>
+                    <span style={{ wordBreak: "break-all", color: t.color.heading }}>
                       {doc.filename}
                     </span>
                     {doc.status === "error" && doc.error_msg && (
@@ -362,35 +376,44 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
                         style={{
                           color: "#fca5a5",
                           fontSize: "0.75rem",
-                          marginTop: "0.25rem",
+                          marginTop: "0.3rem",
+                          lineHeight: 1.45,
                         }}
                       >
                         {doc.error_msg}
                       </div>
                     )}
                   </td>
-                  <td style={{ ...cell, color: "#94a3b8" }}>{doc.owner_email}</td>
-                  <td style={{ ...cell, textTransform: "uppercase" }}>
+                  <td style={{ ...g.tableCell, color: t.color.muted }}>
+                    {doc.owner_email}
+                  </td>
+                  <td style={{ ...g.tableCell, textTransform: "uppercase", color: t.color.muted }}>
                     {doc.file_type}
                   </td>
-                  <td style={cell}>
+                  <td style={g.tableCell}>
                     <StatusBadge status={doc.status} />
                   </td>
-                  <td style={{ ...cell, color: "#94a3b8" }}>
+                  <td style={{ ...g.tableCell, color: t.color.muted, whiteSpace: "nowrap" }}>
                     {formatDate(doc.upload_date)}
                   </td>
-                  <td style={{ ...cell, textAlign: "right" }}>
+                  <td style={{ ...g.tableCell, textAlign: "right" }}>
                     <button
                       type="button"
                       disabled={deletingDocId === doc.id}
                       onClick={() => deleteDocument(doc)}
+                      className="ld-btn"
                       style={{
-                        ...dangerButton,
-                        opacity: deletingDocId === doc.id ? 0.6 : 1,
-                        cursor:
-                          deletingDocId === doc.id ? "not-allowed" : "pointer",
+                        ...g.smallDangerButton,
+                        ...(deletingDocId === doc.id
+                          ? { opacity: 0.6, cursor: "not-allowed" }
+                          : {}),
                       }}
                     >
+                      {deletingDocId === doc.id ? (
+                        <Spinner size={12} thickness={2} />
+                      ) : (
+                        <Trash2 size={12} />
+                      )}
                       {deletingDocId === doc.id ? "Siliniyor..." : "Sil"}
                     </button>
                   </td>
@@ -404,21 +427,55 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+const sectionHeading = {
+  fontSize: "1.05rem",
+  margin: "0 0 0.75rem",
+  color: t.color.heading,
+  letterSpacing: "-0.2px",
+} as const;
+
+function StatCard({
+  icon: StatIcon,
+  label,
+  value,
+  accent = t.color.primarySoft,
+}: {
+  icon: Icon;
+  label: string;
+  value: number;
+  accent?: string;
+}) {
   return (
-    <div
-      style={{
-        background: "#0f172a",
-        border: "1px solid #334155",
-        borderRadius: 10,
-        padding: "1rem",
-        textAlign: "center",
-      }}
-    >
-      <div style={{ fontSize: "1.6rem", fontWeight: 700 }}>{value}</div>
-      <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.25rem" }}>
-        {label}
-      </div>
+    <div style={g.statCard} className="ld-glass-soft">
+      <span
+        style={{
+          ...g.iconWrap,
+          width: 38,
+          height: 38,
+          color: accent,
+          background: "rgba(148, 163, 184, 0.07)",
+          border: `1px solid ${t.color.borderStrong}`,
+        }}
+      >
+        <StatIcon size={17} />
+      </span>
+      <span>
+        <span
+          style={{
+            display: "block",
+            fontSize: "1.45rem",
+            fontWeight: 700,
+            color: t.color.heading,
+            lineHeight: 1.2,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {value}
+        </span>
+        <span style={{ display: "block", fontSize: "0.74rem", color: t.color.muted }}>
+          {label}
+        </span>
+      </span>
     </div>
   );
 }

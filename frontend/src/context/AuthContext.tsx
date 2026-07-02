@@ -41,20 +41,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Uygulama açılışında localStorage'daki token ile oturumu geri yükle.
+  // setState çağrıları promise callback'lerinde yapılır; efekt gövdesinde
+  // doğrudan state güncellenmez (react-hooks/set-state-in-effect).
   useEffect(() => {
-    const stored =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem(TOKEN_STORAGE_KEY)
-        : null;
+    const stored = window.localStorage.getItem(TOKEN_STORAGE_KEY);
 
     if (!stored) {
-      setLoading(false);
+      void Promise.resolve().then(() => setLoading(false));
       return;
     }
 
-    setToken(stored);
     apiFetch<User>("/auth/me", { token: stored })
-      .then((me) => setUser(me))
+      .then((me) => {
+        setToken(stored);
+        setUser(me);
+      })
       .catch(() => {
         // Token geçersiz/expired: temizle.
         window.localStorage.removeItem(TOKEN_STORAGE_KEY);

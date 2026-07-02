@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { AlertTriangle, MessageSquare, SendHorizontal } from "lucide-react";
+import { glass as g, tokens as t } from "../lib/ui";
 import SourcePanel, { type Source } from "./SourcePanel";
 
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   sources?: Source[];
+  /** Backend hatası sohbet akışında gösterilirken işaretlenir. */
+  isError?: boolean;
 }
 
 interface ChatBoxProps {
@@ -44,6 +48,8 @@ export default function ChatBox({
     setInput("");
   }
 
+  const sendDisabled = disabled || loading || input.trim().length === 0;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div
@@ -57,9 +63,26 @@ export default function ChatBox({
         }}
       >
         {messages.length === 0 && (
-          <p style={{ color: "#64748b", fontSize: "0.9rem", margin: "auto" }}>
-            Henüz mesaj yok. Yüklediğiniz dokümanlar hakkında soru sorun.
-          </p>
+          <div
+            style={{
+              margin: "auto",
+              textAlign: "center",
+              color: t.color.subtle,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "0.7rem",
+              padding: "1.5rem 1rem",
+            }}
+          >
+            <span style={{ ...g.iconWrap, width: 46, height: 46 }}>
+              <MessageSquare size={21} />
+            </span>
+            <p style={{ margin: 0, fontSize: "0.9rem", lineHeight: 1.55, maxWidth: 320 }}>
+              Henüz mesaj yok. Yüklediğiniz dokümanlar hakkında soru sorun;
+              cevaplar kaynak referanslarıyla gelir.
+            </p>
+          </div>
         )}
 
         {messages.map((message, index) => (
@@ -72,7 +95,7 @@ export default function ChatBox({
 
       <form
         onSubmit={handleSubmit}
-        style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}
+        style={{ display: "flex", gap: "0.5rem", marginTop: "0.85rem" }}
       >
         <input
           type="text"
@@ -80,37 +103,33 @@ export default function ChatBox({
           onChange={(e) => setInput(e.target.value)}
           placeholder={placeholder}
           disabled={disabled || loading}
-          style={{
-            flex: 1,
-            padding: "0.65rem 0.75rem",
-            background: "#0f172a",
-            border: "1px solid #334155",
-            borderRadius: 8,
-            color: "#e2e8f0",
-            outline: "none",
-          }}
+          aria-label="Sorunuz"
+          style={{ ...g.input, flex: 1, width: "auto" }}
         />
         <button
           type="submit"
-          disabled={disabled || loading || input.trim().length === 0}
+          disabled={sendDisabled}
+          className="ld-btn"
+          aria-label="Gönder"
           style={{
-            padding: "0.65rem 1.1rem",
-            background: "#2563eb",
-            color: "#fff",
-            border: "none",
-            borderRadius: 8,
-            cursor:
-              disabled || loading || input.trim().length === 0
-                ? "not-allowed"
-                : "pointer",
-            fontWeight: 600,
-            opacity:
-              disabled || loading || input.trim().length === 0 ? 0.6 : 1,
+            ...g.glassButton,
+            padding: "0.65rem 1rem",
+            ...(sendDisabled
+              ? { opacity: 0.55, cursor: "not-allowed", transform: "none" }
+              : {}),
           }}
         >
-          Gönder
+          <SendHorizontal size={16} />
+          <span className="ld-send-label">Gönder</span>
         </button>
       </form>
+      <style jsx>{`
+        @media (max-width: 560px) {
+          .ld-send-label {
+            display: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -119,16 +138,17 @@ export default function ChatBox({
 function TypingIndicator() {
   return (
     <div
-      className="ld-fade-in"
+      className="ld-fade-in ld-glass-soft"
       style={{
         alignSelf: "flex-start",
         display: "flex",
         alignItems: "center",
         gap: "0.3rem",
-        background: "#1e293b",
-        border: "1px solid #334155",
-        borderRadius: 12,
+        background: t.color.glass,
+        border: `1px solid ${t.color.border}`,
+        borderRadius: t.radius.md,
         padding: "0.7rem 0.85rem",
+        boxShadow: t.shadow.insetHi,
       }}
       aria-label="Asistan yazıyor"
     >
@@ -139,7 +159,7 @@ function TypingIndicator() {
             width: 7,
             height: 7,
             borderRadius: "50%",
-            background: "#94a3b8",
+            background: t.color.muted,
             display: "inline-block",
             animation: "ld-blink 1.2s infinite both",
             animationDelay: `${i * 0.18}s`,
@@ -152,20 +172,42 @@ function TypingIndicator() {
 
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
+  const isError = message.isError === true;
+
   return (
     <div
       className="ld-fade-in"
       style={{
         alignSelf: isUser ? "flex-end" : "flex-start",
         maxWidth: "85%",
-        background: isUser ? "#2563eb" : "#1e293b",
-        border: isUser ? "none" : "1px solid #334155",
-        color: isUser ? "#fff" : "#e2e8f0",
-        borderRadius: 12,
+        background: isUser
+          ? "linear-gradient(180deg, #2f6bff 0%, #2356e6 100%)"
+          : isError
+            ? "rgba(248, 113, 113, 0.08)"
+            : t.color.glass,
+        border: isUser
+          ? "1px solid rgba(96, 165, 250, 0.55)"
+          : isError
+            ? "1px solid rgba(248, 113, 113, 0.32)"
+            : `1px solid ${t.color.border}`,
+        color: isUser ? "#eff6ff" : isError ? "#fecaca" : t.color.text,
+        borderRadius: t.radius.md,
         padding: "0.65rem 0.85rem",
+        boxShadow: isUser ? t.shadow.glowPrimary : t.shadow.insetHi,
       }}
     >
-      <p style={{ margin: 0, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+      <p
+        style={{
+          margin: 0,
+          whiteSpace: "pre-wrap",
+          lineHeight: 1.55,
+          fontSize: "0.92rem",
+          display: isError ? "flex" : undefined,
+          gap: isError ? "0.5rem" : undefined,
+          alignItems: isError ? "flex-start" : undefined,
+        }}
+      >
+        {isError && <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: 2 }} />}
         {message.content}
       </p>
       {!isUser && message.sources && <SourcePanel sources={message.sources} />}
