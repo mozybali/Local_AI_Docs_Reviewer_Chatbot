@@ -56,9 +56,24 @@ class Settings(BaseSettings):
     # LLM üretim parametreleri (opsiyonel; .env'de yoksa varsayılanlar kullanılır).
     # Düşük sıcaklık, bağlama sadık ve daha az "uyduran" cevaplar üretir.
     LLM_TEMPERATURE: float = 0.2
+    # ÇIKTI token limiti (max_tokens). Bağlam penceresi DEĞİLDİR; bağlam
+    # penceresi için LLM_CONTEXT_WINDOW / model tanımındaki context_window
+    # kullanılır (Hafta 6). Bu iki kavram karıştırılmamalıdır.
     LLM_MAX_TOKENS: int = 130000
+    # Varsayılan (legacy) modelin bağlam penceresi (token). LLM_ALLOWED_MODELS
+    # tanımlı değilken tek varsayılan model bu değerle üretilir. Varsayılan,
+    # LLM_MAX_TOKENS'ın eski yüksek varsayılanını da barındıracak genişliktedir.
+    LLM_CONTEXT_WINDOW: int = 131072
     # Lokal model yavaş olabileceğinden istek zaman aşımı geniş tutulur (saniye).
     LLM_TIMEOUT: int = 500
+    # Model allowlist (Hafta 6): kullanıcıların seçebileceği modellerin JSON
+    # listesi. Boş bırakılırsa yukarıdaki LLM_MODEL_NAME/LLM_TEMPERATURE/
+    # LLM_MAX_TOKENS/LLM_CONTEXT_WINDOW değerlerinden tek varsayılan model
+    # üretilir (geriye uyumluluk). Ayrıştırma ve doğrulama
+    # `app.services.model_registry` içindedir; context_window ve
+    # max_output_tokens YALNIZCA buradaki sunucu tarafı tanımdan gelir,
+    # istemciden asla kabul edilmez.
+    LLM_ALLOWED_MODELS: str = ""
 
     # Vektör veritabanı (Hafta 3)
     VECTOR_STORE: str = "chromadb"
@@ -91,6 +106,12 @@ class Settings(BaseSettings):
     LOGIN_RATE_LIMIT_WINDOW_SECONDS: int = 300
     REGISTER_RATE_LIMIT_ATTEMPTS: int = 20
     REGISTER_RATE_LIMIT_WINDOW_SECONDS: int = 3600
+
+    # Chat rate limit (Hafta 6): kullanıcı + IP + mod (rag/general) başına
+    # pencere içinde izin verilen istek sayısı. LLM çağrıları maliyetli olduğu
+    # için login limitinden daha geniş ama yine de sınırlı tutulur.
+    CHAT_RATE_LIMIT_ATTEMPTS: int = 30
+    CHAT_RATE_LIMIT_WINDOW_SECONDS: int = 300
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -15,6 +15,7 @@ import { apiFetch, getErrorMessage } from "../lib/api";
 import { glass as g, tokens as t, ui } from "../lib/ui";
 import StatusBadge from "./StatusBadge";
 import Spinner from "./Spinner";
+import ConfirmDialog from "./ConfirmDialog";
 
 // --- Tipler --------------------------------------------------------------
 
@@ -66,6 +67,8 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [busyUserId, setBusyUserId] = useState<number | null>(null);
   const [deletingDocId, setDeletingDocId] = useState<number | null>(null);
+  // Silme onayı bekleyen doküman; ConfirmDialog bu state ile açılır.
+  const [pendingDelete, setPendingDelete] = useState<AdminDocument | null>(null);
 
   // setState'ler promise callback'lerinde çalışır; böylece efekt gövdesinden
   // doğrudan çağrılabilir (react-hooks/set-state-in-effect). Mutasyon sonrası
@@ -113,14 +116,14 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
     }
   }
 
-  async function deleteDocument(doc: AdminDocument) {
-    if (
-      !window.confirm(
-        `"${doc.filename}" dokümanını (${doc.owner_email}) silmek istediğinize emin misiniz?`,
-      )
-    ) {
-      return;
-    }
+  function deleteDocument(doc: AdminDocument) {
+    setPendingDelete(doc);
+  }
+
+  async function confirmDeleteDocument() {
+    if (!pendingDelete) return;
+    const doc = pendingDelete;
+    setPendingDelete(null);
     setDeletingDocId(doc.id);
     setError(null);
     try {
@@ -423,6 +426,23 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
           </table>
         )}
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Dokümanı sil"
+        message={
+          <>
+            <strong style={{ color: t.color.text }}>{pendingDelete?.filename}</strong>{" "}
+            dokümanı ({pendingDelete?.owner_email}) kalıcı olarak silinecek. Bu
+            işlem geri alınamaz.
+          </>
+        }
+        confirmLabel="Evet, sil"
+        cancelLabel="Vazgeç"
+        variant="danger"
+        onConfirm={() => void confirmDeleteDocument()}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

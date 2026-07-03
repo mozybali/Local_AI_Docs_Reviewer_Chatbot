@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ComponentType } from "react";
 import {
+  Bot,
   Database,
   FileText,
   LogOut,
@@ -23,6 +24,7 @@ interface NavLink {
 
 const NAV_LINKS: NavLink[] = [
   { href: "/chat", label: "Sohbet", icon: MessageSquare },
+  { href: "/general-chat", label: "Normal Sohbet", icon: Bot },
   { href: "/documents", label: "Dokümanlarım", icon: FileText },
   { href: "/upload", label: "Yükle", icon: UploadCloud },
   { href: "/admin", label: "Admin", icon: Shield, adminOnly: true },

@@ -17,12 +17,15 @@ interface ChatBoxProps {
   loading: boolean;
   disabled?: boolean;
   placeholder?: string;
+  /** Hiç mesaj yokken gösterilen açıklama (RAG ve normal sohbette farklı). */
+  emptyStateText?: string;
 }
 
 /**
  * Sohbet görünümü: mesaj listesi + soru giriş alanı.
+ * - Hem RAG (kaynaklı) hem normal sohbet ekranında kullanılır; kaynak paneli
+ *   yalnızca mesajda `sources` varsa gösterilir.
  * - Kullanıcı ve asistan mesajlarını farklı hizalar.
- * - Asistan mesajlarının altında kaynak panelini gösterir.
  * - Cevap beklenirken giriş kilitlenir ve "yazıyor" göstergesi çıkar.
  */
 export default function ChatBox({
@@ -31,6 +34,7 @@ export default function ChatBox({
   loading,
   disabled = false,
   placeholder = "Dokümanlarınız hakkında bir soru sorun...",
+  emptyStateText = "Henüz mesaj yok. Yüklediğiniz dokümanlar hakkında soru sorun; cevaplar kaynak referanslarıyla gelir.",
 }: ChatBoxProps) {
   const [input, setInput] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
@@ -79,8 +83,7 @@ export default function ChatBox({
               <MessageSquare size={21} />
             </span>
             <p style={{ margin: 0, fontSize: "0.9rem", lineHeight: 1.55, maxWidth: 320 }}>
-              Henüz mesaj yok. Yüklediğiniz dokümanlar hakkında soru sorun;
-              cevaplar kaynak referanslarıyla gelir.
+              {emptyStateText}
             </p>
           </div>
         )}

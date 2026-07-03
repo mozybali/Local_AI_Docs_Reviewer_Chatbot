@@ -7,6 +7,7 @@ import { glass as g, tokens as t, ui } from "../lib/ui";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Header from "../components/Header";
 import Spinner from "../components/Spinner";
+import ConfirmDialog from "../components/ConfirmDialog";
 import DocumentList, { type DocumentItem } from "../components/DocumentList";
 
 const PENDING_STATUSES = ["uploaded", "processing"];
@@ -17,6 +18,8 @@ function DocumentsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  // Silme onayı bekleyen doküman; ConfirmDialog bu state ile açılır.
+  const [pendingDelete, setPendingDelete] = useState<DocumentItem | null>(null);
 
   // setState'ler promise callback'lerinde çalışır; böylece efekt gövdesinden
   // doğrudan çağrılabilir (react-hooks/set-state-in-effect).
@@ -47,10 +50,15 @@ function DocumentsContent() {
     return () => clearInterval(id);
   }, [hasPending, load]);
 
-  async function handleDelete(id: number) {
-    if (!window.confirm("Bu dokümanı silmek istediğinize emin misiniz?")) {
-      return;
-    }
+  function handleDelete(id: number) {
+    const doc = documents.find((d) => d.id === id);
+    if (doc) setPendingDelete(doc);
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    const id = pendingDelete.id;
+    setPendingDelete(null);
     setDeletingId(id);
     setError(null);
     try {
@@ -155,6 +163,23 @@ function DocumentsContent() {
           )}
         </div>
       </main>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Dokümanı sil"
+        message={
+          <>
+            <strong style={{ color: t.color.text }}>{pendingDelete?.filename}</strong>{" "}
+            dokümanı ve ilişkili tüm arama verileri kalıcı olarak silinecek. Bu
+            işlem geri alınamaz.
+          </>
+        }
+        confirmLabel="Evet, sil"
+        cancelLabel="Vazgeç"
+        variant="danger"
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

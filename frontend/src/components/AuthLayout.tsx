@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
-import { Database, FileText, Lock, ShieldCheck } from "lucide-react";
+import { Database, FileText, Lock, ShieldCheck, Users } from "lucide-react";
 import { glass as g, tokens as t } from "../lib/ui";
 
 type Icon = ComponentType<{ size?: number; strokeWidth?: number; color?: string }>;
@@ -8,8 +8,8 @@ type Icon = ComponentType<{ size?: number; strokeWidth?: number; color?: string 
 const VALUE_PROPS: { icon: Icon; title: string; desc: string }[] = [
   {
     icon: Lock,
-    title: "Tamamen lokal",
-    desc: "Doküman içeriği bulut servislerine gönderilmez.",
+    title: "Veri kurum içinde kalır",
+    desc: "Doküman içeriği dış AI servislerine gönderilmeden işlenir.",
   },
   {
     icon: FileText,
@@ -17,9 +17,9 @@ const VALUE_PROPS: { icon: Icon; title: string; desc: string }[] = [
     desc: "Her yanıt dosya adı ve sayfa referansıyla gelir.",
   },
   {
-    icon: ShieldCheck,
-    title: "Güvenli erişim",
-    desc: "JWT kimlik doğrulaması ve kullanıcı bazlı izolasyon.",
+    icon: Users,
+    title: "Kontrollü erişim",
+    desc: "Kullanıcı bazlı izolasyon ve admin görünürlüğü.",
   },
 ];
 
@@ -30,7 +30,8 @@ interface AuthLayoutProps {
 
 /**
  * Login/Register sayfalarının paylaştığı iki panelli auth yerleşimi.
- * Solda marka ve ürün sinyali, sağda form; mobilde yalnızca form kalır.
+ * Solda marka ve ürün tanıtımı, sağda form; mobilde tanıtım paneli gizlenir,
+ * form üstünde kompakt marka satırı gösterilir.
  */
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
@@ -51,7 +52,17 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       <div className="ld-auth-orb ld-auth-orb--cyan" aria-hidden="true" />
 
       <div className="ld-auth-grid">
-        {/* Sol: marka paneli */}
+        {/* Mobil: tanıtım paneli gizliyken görünen marka satırı */}
+        <div className="ld-auth-mobile-brand">
+          <Link href="/" style={g.brand}>
+            <span style={g.brandMark}>
+              <Database size={16} />
+            </span>
+            LocalDoc <span style={{ color: t.color.primarySoft }}>AI</span>
+          </Link>
+        </div>
+
+        {/* Sol: marka ve tanıtım paneli */}
         <aside
           className="ld-auth-side ld-glass"
           style={{
@@ -61,7 +72,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            gap: "2.5rem",
+            gap: "2rem",
           }}
         >
           <Link href="/" style={g.brand}>
@@ -72,20 +83,24 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           </Link>
 
           <div>
+            <span style={g.kicker}>
+              <ShieldCheck size={13} /> Kurumsal doküman asistanı
+            </span>
             <h2
               style={{
-                margin: "0 0 0.6rem",
+                margin: "0.9rem 0 0.6rem",
                 fontSize: "1.5rem",
                 lineHeight: 1.3,
                 letterSpacing: "-0.4px",
                 color: t.color.heading,
               }}
             >
-              Dokümanlarınız için lokal, kaynaklı yapay zeka
+              Şirket dokümanlarınız için güvenli AI bilgi merkezi
             </h2>
             <p style={{ margin: 0, fontSize: "0.88rem", lineHeight: 1.6, color: t.color.muted }}>
-              PDF ve TXT dokümanlarınızı yükleyin; cevaplar yalnızca sizin
-              içeriklerinize dayansın.
+              Sözleşme, rapor, politika ve teknik dokümanlarınız kurum içinde
+              işlenir. Ekipler doğal dille sorar; cevaplar dosya ve sayfa
+              referansıyla gelir.
             </p>
           </div>
 
@@ -121,6 +136,47 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
               </div>
             ))}
           </div>
+
+          {/* Tanıtım: örnek kaynaklı cevap kartı */}
+          <div
+            className="ld-glass-soft"
+            aria-hidden="true"
+            style={{
+              ...g.glassPanelSoft,
+              padding: "0.9rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5rem",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "0.64rem",
+                fontWeight: 700,
+                letterSpacing: "0.5px",
+                color: t.color.subtle,
+              }}
+            >
+              ÖRNEK KAYNAKLI CEVAP
+            </span>
+            <p style={{ margin: 0, fontSize: "0.8rem", lineHeight: 1.55, color: t.color.text }}>
+              &ldquo;Fesih bildirimi, sözleşmeye göre en az 30 gün önce yazılı
+              olarak yapılmalıdır.&rdquo;
+            </p>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.4rem",
+                fontSize: "0.7rem",
+                color: t.color.cyan,
+              }}
+            >
+              <FileText size={11} />
+              hizmet_sozlesmesi.pdf · s. 8
+              <span style={{ marginLeft: "auto", fontWeight: 700 }}>%91</span>
+            </span>
+          </div>
         </aside>
 
         {/* Sağ: form paneli */}
@@ -132,7 +188,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           position: relative;
           z-index: 1;
           width: 100%;
-          max-width: 860px;
+          max-width: 880px;
           display: grid;
           grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
           gap: 1.25rem;
@@ -141,6 +197,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         .ld-auth-form {
           display: flex;
           align-items: center;
+        }
+        .ld-auth-mobile-brand {
+          display: none;
         }
         .ld-auth-orb {
           position: fixed;
@@ -172,6 +231,11 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           }
           .ld-auth-side {
             display: none !important;
+          }
+          .ld-auth-mobile-brand {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0.25rem;
           }
         }
       `}</style>

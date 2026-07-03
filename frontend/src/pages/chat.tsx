@@ -15,6 +15,8 @@ import { glass as g, tokens as t, ui } from "../lib/ui";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Header from "../components/Header";
 import ChatBox, { type ChatMessage } from "../components/ChatBox";
+import ModelSelector from "../components/ModelSelector";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { type Source } from "../components/SourcePanel";
 import { type DocumentItem } from "../components/DocumentList";
 
@@ -46,6 +48,8 @@ function ChatContent() {
   const { user, token } = useAuth();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  // Seçili model id'si; ModelSelector varsayılanı backend'den alıp doldurur.
+  const [modelId, setModelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     readHistory(user?.id),
   );
@@ -54,6 +58,8 @@ function ChatContent() {
   // Doküman listesi yüklenirken oluşan hata (backend kapalı, 401 vb.).
   // "boş liste" durumundan ayırmak için ayrı tutulur.
   const [docError, setDocError] = useState<string | null>(null);
+  // Geçmiş temizleme onay modalı.
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   // Sohbet için yalnızca işlenmesi tamamlanmış (`ready`) dokümanlar kullanılabilir.
   const readyDocuments = documents.filter((d) => d.status === "ready");
@@ -95,11 +101,13 @@ function ChatContent() {
 
   function clearHistory() {
     if (messages.length === 0) return;
-    if (!window.confirm("Sohbet geçmişini temizlemek istediğinize emin misiniz?")) {
-      return;
-    }
+    setConfirmClearOpen(true);
+  }
+
+  function confirmClearHistory() {
     setMessages([]);
     setError(null);
+    setConfirmClearOpen(false);
   }
 
   async function handleSend(question: string) {
@@ -114,6 +122,8 @@ function ChatContent() {
           question,
           // Hiç doküman seçilmezse tüm `ready` dokümanlarda ara (null).
           document_ids: selectedIds.length > 0 ? selectedIds : null,
+          // Backend allowlist'e göre doğrular; null ise varsayılan model.
+          model_id: modelId,
         },
       });
       setMessages((prev) => [
@@ -184,6 +194,10 @@ function ChatContent() {
               <Trash2 size={13} />
               Geçmişi temizle
             </button>
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <ModelSelector mode="rag" value={modelId} onChange={setModelId} />
           </div>
 
           {docError ? (
@@ -298,6 +312,17 @@ function ChatContent() {
           </div>
         </div>
       </main>
+
+      <ConfirmDialog
+        open={confirmClearOpen}
+        title="Sohbet geçmişini temizle"
+        message="Bu cihazda kayıtlı sohbet geçmişiniz silinecek. Bu işlem geri alınamaz."
+        confirmLabel="Evet, temizle"
+        cancelLabel="Vazgeç"
+        variant="danger"
+        onConfirm={confirmClearHistory}
+        onCancel={() => setConfirmClearOpen(false)}
+      />
     </div>
   );
 }

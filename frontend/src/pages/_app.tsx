@@ -1,8 +1,47 @@
 import type { AppProps } from "next/app";
 import Head from "next/head";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import { AuthProvider } from "../context/AuthContext";
 
+// Geçiş perdesinin durumu: rota değişimi başlayınca ekran "cover" ile
+// kapanır, yeni sayfa hazır olunca "reveal" ile açılır ve katman kaldırılır.
+type VeilPhase = "idle" | "cover" | "reveal";
+
 export default function App({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+  // Sayfalar arası geçişte üstte akan ince ilerleme çubuğu.
+  const [navigating, setNavigating] = useState(false);
+  const [veil, setVeil] = useState<VeilPhase>("idle");
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const start = (_url: string, { shallow }: { shallow: boolean }) => {
+      if (shallow) return;
+      setNavigating(true);
+      // Hareket azaltma tercihinde perde efekti atlanır; çubuk yeterli sinyal.
+      if (!reduceMotion.matches) setVeil("cover");
+      // Rota değişimindeki otomatik en-üste kaydırma perde altında anında
+      // gerçekleşsin; sayfa içi smooth scroll etkilenmez (aşağıda geri alınır).
+      document.documentElement.style.scrollBehavior = "auto";
+    };
+    const end = () => {
+      setNavigating(false);
+      setVeil((v) => (v === "cover" ? "reveal" : v));
+      requestAnimationFrame(() => {
+        document.documentElement.style.scrollBehavior = "";
+      });
+    };
+    router.events.on("routeChangeStart", start);
+    router.events.on("routeChangeComplete", end);
+    router.events.on("routeChangeError", end);
+    return () => {
+      router.events.off("routeChangeStart", start);
+      router.events.off("routeChangeComplete", end);
+      router.events.off("routeChangeError", end);
+    };
+  }, [router.events]);
+
   return (
     <AuthProvider>
       <Head>
@@ -12,7 +51,23 @@ export default function App({ Component, pageProps }: AppProps) {
         />
         <title>LocalDoc AI</title>
       </Head>
-      <Component {...pageProps} />
+      {navigating && <div className="ld-route-progress" aria-hidden="true" />}
+      {/* Geçiş perdesi: eski sayfanın üzerine kapanır, yeni sayfa mount
+          olduktan sonra açılarak yumuşak bir cross-fade hissi verir. */}
+      {veil !== "idle" && (
+        <div
+          className={`ld-route-veil ${veil === "cover" ? "is-cover" : "is-reveal"}`}
+          aria-hidden="true"
+          onAnimationEnd={() =>
+            setVeil((v) => (v === "reveal" ? "idle" : v))
+          }
+        />
+      )}
+      {/* key=pathname: her rota değişiminde sarmalayıcı yeniden mount olur ve
+          giriş animasyonu tekrarlanır (sayfalar arası geçiş animasyonu). */}
+      <div key={router.pathname} className="ld-route-transition">
+        <Component {...pageProps} />
+      </div>
       <style jsx global>{`
         * {
           box-sizing: border-box;
@@ -351,6 +406,101 @@ export default function App({ Component, pageProps }: AppProps) {
         }
         .ld-fade-up {
           animation: ld-fade-up 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+        }
+
+        /* --- Sayfalar arası geçiş --- */
+        /* fill-mode backwards: animasyon bitince transform "none"a döner;
+           böylece sayfa içindeki position:fixed katmanlar (modal, glow)
+           viewport'a göre konumlanmaya devam eder. */
+        .ld-route-transition {
+          animation: ld-route-enter 0.42s cubic-bezier(0.22, 0.61, 0.36, 1)
+            backwards;
+        }
+        @keyframes ld-route-enter {
+          from {
+            opacity: 0;
+            transform: translateY(16px) scale(0.995);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        /* Geçiş perdesi: markalı ışımalı koyu katman. Cover'da ekranı kaplar,
+           reveal'da yeni sayfanın üzerinden yumuşakça çekilir. */
+        .ld-route-veil {
+          position: fixed;
+          inset: 0;
+          z-index: 150;
+          pointer-events: none;
+          background:
+            radial-gradient(
+              900px 480px at 50% -10%,
+              rgba(37, 99, 235, 0.28),
+              transparent 65%
+            ),
+            radial-gradient(
+              700px 420px at 50% 110%,
+              rgba(34, 211, 238, 0.14),
+              transparent 60%
+            ),
+            rgba(4, 7, 14, 0.9);
+        }
+        .ld-route-veil.is-cover {
+          animation: ld-veil-in 0.2s ease-out both;
+        }
+        .ld-route-veil.is-reveal {
+          animation: ld-veil-out 0.36s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+        }
+        @keyframes ld-veil-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        @keyframes ld-veil-out {
+          from {
+            opacity: 1;
+          }
+          to {
+            opacity: 0;
+          }
+        }
+        /* Rota değişirken üstte süzülen ilerleme çubuğu. */
+        .ld-route-progress {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          z-index: 200;
+          pointer-events: none;
+          background: linear-gradient(90deg, transparent, #2f6bff, #22d3ee, transparent);
+          background-size: 50% 100%;
+          background-repeat: no-repeat;
+          animation: ld-route-progress 0.9s ease-in-out infinite;
+        }
+        @keyframes ld-route-progress {
+          from {
+            background-position: -100% 0;
+          }
+          to {
+            background-position: 200% 0;
+          }
+        }
+
+        /* --- Modal (ConfirmDialog) giriş animasyonu --- */
+        @keyframes ld-modal-in {
+          from {
+            opacity: 0;
+            transform: translateY(14px) scale(0.97);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
         }
 
         /* --- Mobil uyum --- */

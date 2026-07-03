@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import {
   useEffect,
@@ -40,79 +41,97 @@ type Icon = ComponentType<{ size?: number; strokeWidth?: number; color?: string 
 // --- Statik içerik tanımları (tek kaynaktan yönetilir) ---
 
 const TRUST_BADGES: { icon: Icon; label: string }[] = [
-  { icon: Shield, label: "Lokal AI" },
-  { icon: Lock, label: "JWT Auth" },
-  { icon: FileText, label: "Kaynaklı Cevaplar" },
-  { icon: Database, label: "ChromaDB RAG" },
-  { icon: CheckCircle2, label: "Admin Paneli" },
+  { icon: ShieldCheck, label: "Kurum içi AI" },
+  { icon: Lock, label: "Hassas veri kontrolü" },
+  { icon: FileText, label: "Sayfa kaynaklı cevap" },
+  { icon: Users, label: "Kullanıcı bazlı erişim" },
+  { icon: CheckCircle2, label: "Admin görünürlüğü" },
 ];
 
 const FEATURES: { icon: Icon; title: string; desc: string }[] = [
   {
+    icon: FileSearch,
+    title: "Bilgiye daha hızlı ulaşın",
+    desc: "Uzun sözleşme, rapor, politika ve prosedürlerde aranan maddeyi doğal dille bulun; ekipler arama için zaman kaybetmez.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Denetlenebilir cevaplar alın",
+    desc: "Her yanıt dosya adı, sayfa bilgisi ve benzerlik skoruyla gelir; kararın hangi kaynağa dayandığı açık kalır.",
+  },
+  {
     icon: Lock,
-    title: "Veriler lokalde kalır",
-    desc: "Doküman içeriği bulut tabanlı LLM servislerine gönderilmez; işleme tamamen kendi ortamınızda yapılır.",
-  },
-  {
-    icon: Search,
-    title: "RAG tabanlı cevaplar",
-    desc: "Cevaplar semantik arama ile getirilen doküman parçalarına dayanır; model serbest tahmin yürütmez.",
-  },
-  {
-    icon: FileText,
-    title: "Her cevapta kaynak",
-    desc: "Yanıtlarla birlikte dosya adı, sayfa numarası ve eşleşme skoru şeffaf biçimde gösterilir.",
+    title: "Veriyi kurum içinde tutun",
+    desc: "Doküman içeriği dış AI servislerine gönderilmeden, uçtan uca kurum içi altyapıda işlenir ve saklanır.",
   },
   {
     icon: Users,
-    title: "Kullanıcı bazlı izolasyon",
-    desc: "JWT kimlik doğrulaması ile her kullanıcı yalnızca kendi dokümanlarına erişir.",
+    title: "Ekip erişimini kontrol edin",
+    desc: "Kurumsal kimlik doğrulama, kullanıcı bazlı izolasyon ve admin görünürlüğüyle hassas dokümanlara erişim kontrollü yönetilir.",
   },
 ];
 
 const FLOW_STEPS: { icon: Icon; title: string; desc: string }[] = [
   {
     icon: UploadCloud,
-    title: "Dokümanı yükle",
-    desc: "PDF, TXT veya DOCX dosyanız güvenli şekilde alınır ve işleme kuyruğuna eklenir.",
+    title: "Kurumsal dokümanları yükleyin",
+    desc: "PDF, TXT ve DOCX dosyalarınız güvenli şekilde alınır, kullanıcı hesabınıza bağlı olarak işlenir.",
   },
   {
     icon: FileText,
-    title: "Metin çıkarılır",
-    desc: "Sayfa bilgisi korunarak doküman içeriği ayrıştırılır.",
+    title: "İçerik aranabilir hale gelir",
+    desc: "Metin çıkarılır, anlamlı bölümlere ayrılır ve sayfa bilgisi korunarak bilgi tabanına hazırlanır.",
   },
   {
     icon: Layers,
-    title: "Chunk + embedding üretilir",
-    desc: "Metin anlamlı parçalara bölünür, vektörleştirilir ve ChromaDB üzerinde saklanır.",
+    title: "AI bilgi tabanı oluşur",
+    desc: "İçerik anlamsal aramaya hazır hale getirilir; tüm işlem kurum içinde, doküman sahibiyle izole biçimde yapılır.",
   },
   {
     icon: MessageSquare,
-    title: "Sorunuzu sorun",
-    desc: "Semantik arama, sorunuzla en alakalı doküman parçalarını getirir.",
+    title: "Ekipler doğal dille sorar",
+    desc: "Kullanıcılar teknik arama operatörleri bilmeden; politika, rapor veya sözleşme hakkında doğrudan soru sorar.",
   },
   {
     icon: CheckCircle2,
-    title: "Kaynaklı cevabı alın",
-    desc: "Lokal model, yalnızca getirilen bağlama dayanarak kaynak referanslı cevap üretir.",
+    title: "Cevap kanıtlarıyla paylaşılır",
+    desc: "Lokal model yalnızca getirilen bağlama dayanır; kaynak bulunamazsa bunu açıkça belirtir.",
   },
 ];
 
 const USE_CASES: { icon: Icon; title: string; desc: string }[] = [
   {
     icon: Building2,
-    title: "Kurumsal bilgi tabanı",
-    desc: "Prosedür, politika ve süreç dokümanlarını tek yerden sorgulanabilir hale getirin.",
+    title: "Operasyon ve kalite ekipleri",
+    desc: "Prosedür, talimat ve kalite dokümanlarında doğru maddeye hızla ulaşarak saha kararlarını standartlaştırın.",
   },
   {
     icon: FileSearch,
-    title: "Rapor ve sözleşme analizi",
-    desc: "Uzun raporlarda aradığınız maddeyi sayfa referansıyla saniyeler içinde bulun.",
+    title: "Hukuk, sözleşme ve uyumluluk",
+    desc: "Sözleşme yükümlülüklerini, regülasyon maddelerini ve iç politika referanslarını kaynaklarıyla kontrol edin.",
   },
   {
     icon: BookOpen,
-    title: "Araştırma ve ders notları",
-    desc: "Akademik PDF ve notlarınızı kaynak gösteren bir çalışma asistanına dönüştürün.",
+    title: "Yönetim raporları ve iç bilgi",
+    desc: "Rapor, toplantı notu ve kurumsal bilgi dokümanlarını yöneticiler için sorgulanabilir bir karar desteğine dönüştürün.",
+  },
+];
+
+const CUSTOMER_OUTCOMES: { value: string; label: string; desc: string }[] = [
+  {
+    value: "Tek merkez",
+    label: "Kurumsal bilgi erişimi",
+    desc: "Dağınık dosyaları tek bir güvenli soru-cevap deneyiminde toplayın.",
+  },
+  {
+    value: "Kaynaklı",
+    label: "Denetlenebilir karar desteği",
+    desc: "Yanıtların dayandığı doküman ve sayfa bilgisini anında görün.",
+  },
+  {
+    value: "Lokal",
+    label: "Veri egemenliği",
+    desc: "Hassas içerikleri dış AI servislerine göndermeden çalışın.",
   },
 ];
 
@@ -145,7 +164,7 @@ const QUICK_ACTIONS: { icon: Icon; label: string; desc: string; href: string }[]
 
 const SCENE_LABELS = [
   "Doküman yükleniyor",
-  "Chunk + embedding oluşturuluyor",
+  "İçerik güvenli biçimde indeksleniyor",
   "Kullanıcı soru soruyor",
   "AI kaynaklara dayanarak yanıtlıyor",
   "Kaynak paneli inceleniyor",
@@ -156,9 +175,9 @@ const FRAMES_PER_SCENE = 44; // 44 kare × 80ms ≈ 3.5sn / sahne
 const TICK_MS = 80;
 const TOTAL_FRAMES = SCENE_COUNT * FRAMES_PER_SCENE;
 
-const DEMO_QUESTION = "Bu dokümandaki ana riskler neler?";
+const DEMO_QUESTION = "Sözleşmedeki ana teslimat riski nedir?";
 const DEMO_ANSWER =
-  "Raporda öne çıkan riskler: operasyonel bağımlılık, regülasyon değişiklikleri ve likidite baskısı (s. 4).";
+  "Ana risk, gecikme durumunda uygulanacak cezalar ve tek tedarikçiye bağımlılık olarak belirtilmiş (s. 12).";
 
 // Sahne başına imlecin durduğu nokta (yüzde cinsinden).
 const CURSOR_POS: { top: string; left: string }[] = [
@@ -272,7 +291,7 @@ function PromoStage() {
           <StageDot color="#34d399" />
         </span>
         <span style={{ fontSize: "0.72rem", color: t.color.subtle, marginLeft: "0.3rem" }}>
-          LocalDoc AI — workspace
+          LocalDoc AI — kurumsal çalışma alanı
         </span>
         <span
           style={{
@@ -295,7 +314,7 @@ function PromoStage() {
               animation: "ld-pulse 1.4s ease-in-out infinite",
             }}
           />
-          OTOMATİK TUR
+          ÜRÜN TURU
         </span>
       </div>
 
@@ -314,13 +333,13 @@ function PromoStage() {
         >
           <span style={chip}>DOKÜMANLAR</span>
           <StageDoc
-            name="annual_report.pdf"
+            name="tedarik_sozlesmesi.pdf"
             state={docState}
             progress={uploadProgress}
             highlighted={showSources}
           />
-          <StageDoc name="policy.txt" state="ready" highlighted={showSources} />
-          <StageDoc name="research_notes.pdf" state="ready" />
+          <StageDoc name="bilgi_guvenligi_politikasi.docx" state="ready" highlighted={showSources} />
+          <StageDoc name="yonetim_raporu.pdf" state="ready" />
         </div>
 
         {/* Sağ: sahneye göre değişen çalışma alanı */}
@@ -355,7 +374,7 @@ function PromoStage() {
               >
                 <FileUp size={20} color={t.color.primarySoft} />
                 <div style={{ fontSize: "0.74rem", color: t.color.text, margin: "0.45rem 0 0.55rem" }}>
-                  annual_report.pdf yükleniyor…
+                  tedarik_sozlesmesi.pdf yükleniyor…
                 </div>
                 <StageProgress value={uploadProgress} />
               </div>
@@ -369,7 +388,7 @@ function PromoStage() {
                 }}
               >
                 <div style={{ ...chip, marginBottom: "0.6rem" }}>
-                  <Cpu size={12} color={t.color.cyan} /> CHUNK + EMBEDDING
+                  <Cpu size={12} color={t.color.cyan} /> GÜVENLİ İNDEKSLEME
                 </div>
                 <div
                   style={{
@@ -406,7 +425,7 @@ function PromoStage() {
                   }}
                 />
                 <div style={{ fontSize: "0.68rem", color: t.color.muted, marginTop: "0.5rem" }}>
-                  {Math.min(litChunks, CHUNK_CELLS)}/{CHUNK_CELLS} parça vektörleştirildi · ChromaDB
+                  {Math.min(litChunks, CHUNK_CELLS)}/{CHUNK_CELLS} bölüm güvenli arama için hazırlandı
                 </div>
               </div>
             )}
@@ -495,8 +514,8 @@ function PromoStage() {
                     <div style={{ ...chip, color: t.color.cyan, marginBottom: "0.4rem" }}>
                       <FileText size={11} /> KAYNAKLAR (2)
                     </div>
-                    <StageSource text="annual_report.pdf · s. 4" score="%87" delay={0} />
-                    <StageSource text="policy.txt · s. 2" score="%74" delay={140} />
+                    <StageSource text="tedarik_sozlesmesi.pdf · s. 12" score="%87" delay={0} />
+                    <StageSource text="bilgi_guvenligi_politikasi.docx · s. 3" score="%74" delay={140} />
                   </div>
                 )}
               </>
@@ -833,6 +852,14 @@ export default function HomePage() {
 
   return (
     <div ref={shellRef} style={{ ...g.pageShell, overflow: "hidden" }}>
+      <Head>
+        <title>LocalDoc AI | Kurumsal Lokal Doküman Asistanı</title>
+        <meta
+          name="description"
+          content="LocalDoc AI, şirket dokümanlarını lokal ortamda işleyen, kaynaklı ve güvenli AI doküman asistanıdır."
+        />
+      </Head>
+
       {/* Mouse'u takip eden, mavi–cyan tonlarında ışıyan arka plan katmanı */}
       <div className="ld-cursor-glow" aria-hidden="true" />
 
@@ -898,7 +925,7 @@ export default function HomePage() {
                 className="ld-btn"
                 style={{ ...g.glassButton, padding: "0.5rem 0.95rem", fontSize: "0.85rem" }}
               >
-                Kayıt Ol
+                Hesap Oluştur
               </Link>
             </div>
           )}
@@ -1018,7 +1045,7 @@ export default function HomePage() {
             <div className="ld-hero">
               <div className="ld-fade-up">
                 <span style={g.kicker}>
-                  <ShieldCheck size={13} /> Lokal · Gizli · Kaynaklı
+                  <ShieldCheck size={13} /> Kurumsal doküman asistanı
                 </span>
                 <h1
                   className="ld-hero-title"
@@ -1030,7 +1057,7 @@ export default function HomePage() {
                     color: t.color.heading,
                   }}
                 >
-                  Dokümanlarınızla{" "}
+                  Şirket dokümanlarınızı{" "}
                   <span
                     style={{
                       background: "linear-gradient(90deg, #60a5fa, #22d3ee)",
@@ -1039,19 +1066,20 @@ export default function HomePage() {
                       color: "transparent",
                     }}
                   >
-                    lokal ve güvenli
+                    güvenli AI bilgi merkezine
                   </span>{" "}
-                  AI sohbeti
+                  dönüştürün
                 </h1>
                 <p style={{ ...g.sectionLead, fontSize: "1.02rem", marginBottom: "1.6rem" }}>
-                  LocalDoc AI; PDF ve TXT dokümanlarınızı tamamen lokal ortamda işler,
-                  semantik arama ile ilgili bölümleri bulur ve her cevabı dosya adı ile
-                  sayfa referansı vererek üretir. Verileriniz makinenizden çıkmaz.
+                  LocalDoc AI; sözleşme, rapor, politika ve teknik dokümanlarınızı
+                  kurum içinde işler. Ekipler doğal dille soru sorar, cevaplar
+                  dosya ve sayfa referansıyla gelir; hassas veriler dış AI
+                  servislerine taşınmadan karar süreçleri hızlanır.
                 </p>
 
                 <div style={{ display: "flex", gap: "0.7rem", flexWrap: "wrap", marginBottom: "1.6rem" }}>
                   <Link href="/register" className="ld-btn" style={g.glassButton}>
-                    Kayıt Ol <ArrowRight size={16} />
+                    Hesap Oluştur <ArrowRight size={16} />
                   </Link>
                   <Link href="/login" className="ld-btn" style={g.ghostButton}>
                     Giriş Yap
@@ -1066,6 +1094,16 @@ export default function HomePage() {
                     </span>
                   ))}
                 </div>
+
+                <div className="ld-outcome-strip">
+                  {CUSTOMER_OUTCOMES.map((item) => (
+                    <div key={item.label} className="ld-glass-soft" style={g.glassPanelSoft}>
+                      <strong>{item.value}</strong>
+                      <span>{item.label}</span>
+                      <p>{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div ref={stageWrapRef} className="ld-fade-up" style={{ animationDelay: "120ms" }}>
@@ -1078,14 +1116,15 @@ export default function HomePage() {
           <section style={{ ...g.container, padding: "4rem 1.25rem 1rem" }}>
             <Reveal variant="blur">
               <span style={g.kicker}>
-                <Lock size={13} /> Güvenlik ve gizlilik
+                <Lock size={13} /> Müşteri değeri
               </span>
               <h2 style={{ ...g.sectionTitle, marginTop: "0.9rem" }}>
-                Verileriniz sizde kalır, cevaplar kanıtıyla gelir
+                Bilgi aramayı güvenli karar desteğine dönüştürün
               </h2>
               <p style={{ ...g.sectionLead, marginBottom: "1.75rem" }}>
-                Gizliliği, kaynaklı cevapları ve çok kullanıcılı yapıyı bir araya getiren
-                lokal doküman zekası.
+                LocalDoc AI, doküman yoğun ekiplerin aradığı cevaba daha hızlı
+                ulaşmasını sağlar; aynı zamanda gizlilik, kaynak doğrulama ve
+                yetkili erişim ihtiyaçlarını birlikte ele alır.
               </p>
             </Reveal>
 
@@ -1117,15 +1156,15 @@ export default function HomePage() {
               <div className="ld-flow-intro">
                 <Reveal variant="blur">
                   <span style={g.kicker}>
-                    <Search size={13} /> Nasıl çalışır
+                    <Search size={13} /> Uygulama akışı
                   </span>
                   <h2 style={{ ...g.sectionTitle, marginTop: "0.9rem" }}>
-                    Yüklemeden kaynaklı cevaba beş adım
+                    İlk dokümandan kaynaklı cevaba beş adım
                   </h2>
                   <p style={g.sectionLead}>
-                    Doküman işleme hattının tamamı — metin çıkarma, parçalama, embedding
-                    ve retrieval — kendi ortamınızda çalışır. Hiçbir adımda dış servis
-                    devreye girmez.
+                    Kurulumdan sonra ekipleriniz mevcut dokümanlarla çalışmaya
+                    başlar. Sistem arka planda metni hazırlar, ilgili kaynakları
+                    bulur ve cevabı denetlenebilir biçimde sunar.
                   </p>
                 </Reveal>
               </div>
@@ -1203,8 +1242,13 @@ export default function HomePage() {
                 <Sparkles size={13} /> Kullanım senaryoları
               </span>
               <h2 style={{ ...g.sectionTitle, marginTop: "0.9rem" }}>
-                Doküman yoğun her iş akışına uyar
+                Doküman yoğun ekipler için pratik kullanım alanları
               </h2>
+              <p style={g.sectionLead}>
+                Müşteri destekten yönetime, hukuk ekiplerinden kalite süreçlerine
+                kadar kritik bilginin kaynağıyla birlikte bulunması gereken her
+                iş akışında kullanılabilir.
+              </p>
             </Reveal>
 
             <div className="ld-usecases" style={{ marginTop: "1.75rem" }}>
@@ -1244,15 +1288,15 @@ export default function HomePage() {
                 }}
               >
                 <h2 style={{ ...g.sectionTitle, margin: "0 auto 0.7rem", maxWidth: 560 }}>
-                  Kendi doküman bilgi tabanınızı lokal olarak başlatın
+                  Kurum içi doküman zekasını bugün deneyin
                 </h2>
                 <p style={{ ...g.sectionLead, margin: "0 auto 1.6rem" }}>
-                  Birkaç dakikada hesabınızı oluşturun, dokümanlarınızı yükleyin ve
-                  kaynaklı cevaplar almaya başlayın.
+                  Hesabınızı oluşturun, ilk dokümanlarınızı yükleyin ve ekiplerinizin
+                  kaynaklı cevaplarla nasıl daha hızlı ilerlediğini görün.
                 </p>
                 <div style={{ display: "flex", gap: "0.7rem", justifyContent: "center", flexWrap: "wrap" }}>
                   <Link href="/register" className="ld-btn" style={g.glassButton}>
-                    Kayıt Ol <ArrowRight size={16} />
+                    Hesap Oluştur <ArrowRight size={16} />
                   </Link>
                   <Link href="/login" className="ld-btn" style={g.ghostButton}>
                     Giriş Yap
@@ -1283,9 +1327,9 @@ export default function HomePage() {
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
                 <Database size={14} color={t.color.primarySoft} />
-                LocalDoc AI — lokal RAG doküman asistanı
+                LocalDoc AI — kurumsal lokal doküman asistanı
               </span>
-              <span>Verileriniz makinenizden çıkmaz.</span>
+              <span>Kaynaklı cevaplar, kontrollü erişim, kurum içi veri işleme.</span>
             </div>
           </footer>
         </main>
@@ -1322,6 +1366,36 @@ export default function HomePage() {
           grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
           gap: 2.5rem;
           align-items: center;
+        }
+        .ld-outcome-strip {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0.65rem;
+          margin-top: 1.15rem;
+        }
+        .ld-outcome-strip > div {
+          min-height: 118px;
+          padding: 0.85rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.28rem;
+        }
+        .ld-outcome-strip strong {
+          color: #f1f5f9;
+          font-size: 0.95rem;
+          line-height: 1.2;
+        }
+        .ld-outcome-strip span {
+          color: #bfdbfe;
+          font-size: 0.76rem;
+          font-weight: 700;
+          line-height: 1.35;
+        }
+        .ld-outcome-strip p {
+          margin: 0;
+          color: #94a3b8;
+          font-size: 0.74rem;
+          line-height: 1.5;
         }
         .ld-actions {
           display: grid;
@@ -1370,6 +1444,12 @@ export default function HomePage() {
         @media (max-width: 560px) {
           .ld-hero-title {
             font-size: 1.85rem !important;
+          }
+          .ld-outcome-strip {
+            grid-template-columns: 1fr;
+          }
+          .ld-outcome-strip > div {
+            min-height: 0;
           }
           .ld-nav-email {
             display: none;
