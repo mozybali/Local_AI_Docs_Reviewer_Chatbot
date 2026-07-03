@@ -28,7 +28,16 @@ from app.models.document import Document
 from app.models.user import User
 from app.routers import documents
 from app.services import document_service
+from app.utils.rate_limit import rate_limiter
 from app.utils.security import create_access_token, hash_password
+
+
+@pytest.fixture(autouse=True)
+def _clean_rate_limiter():
+    """Global limiter durumunu testler arasında sıfırlar (upload limitli)."""
+    rate_limiter.clear()
+    yield
+    rate_limiter.clear()
 
 
 @pytest.fixture()
@@ -218,3 +227,28 @@ def test_upload_oversized_file_returns_413(client, monkeypatch):
         headers=_auth(1),
     )
     assert res.status_code == 413
+
+
+def test_upload_rate_limit_returns_429(client, monkeypatch):
+    """Kullanıcı + IP başına yükleme sıklığı sınırlıdır (aşımda 429).
+
+    Limit, dosya doğrulamasından ÖNCE uygulanır; doğrulaması başarısız olan
+    denemeler de sayılır (aksi halde saldırgan geçersiz dosyalarla sınırsız
+    işleme/doğrulama maliyeti üretebilirdi).
+    """
+    monkeypatch.setattr(settings, "UPLOAD_RATE_LIMIT_ATTEMPTS", 2)
+
+    for _ in range(2):
+        res = client.post(
+            "/documents/upload",
+            files={"file": ("sahte.pdf", b"MZ\x90\x00", "application/pdf")},
+            headers=_auth(1),
+        )
+        assert res.status_code == 415  # doğrulama reddi; deneme yine sayılır
+
+    res = client.post(
+        "/documents/upload",
+        files={"file": ("sahte.pdf", b"MZ\x90\x00", "application/pdf")},
+        headers=_auth(1),
+    )
+    assert res.status_code == 429

@@ -45,41 +45,27 @@ from app.services.embedding_service import EmbeddingError
 from app.services.llm_service import LLMServiceError
 from app.services.model_registry import ModelNotAllowedError
 from app.services.vector_store import VectorStoreError
-from app.utils.dependencies import get_current_user
-from app.utils.rate_limit import rate_limiter
+from app.utils.dependencies import enforce_user_rate_limit, get_current_user
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
-_RATE_LIMIT_MESSAGE = (
-    "Çok fazla istek gönderildi. Lütfen bir süre sonra tekrar deneyin."
-)
-
-
-def _client_ip(request: Request) -> str:
-    """Rate limit anahtarı için istemci IP'sini döner."""
-    return request.client.host if request.client else "unknown"
-
 
 def _enforce_chat_rate_limit(request: Request, user_id: int, mode: str) -> None:
     """Chat uçları için kullanıcı + IP + mod bazlı rate limit uygular.
 
-    Anahtar kullanıcı kimliğini içerir (token paylaşımını sınırlar), IP ile
-    birleştirilir ve mod'a göre ayrışır; RAG kullanımı normal sohbeti (ya da
-    tersini) kilitlemez. Limit aşımında `429` döner.
+    Anahtar mod'a göre ayrışır (`chat:rag` / `chat:general`); RAG kullanımı
+    normal sohbeti (ya da tersini) kilitlemez. Limit aşımında `429` döner.
+    Kontrol + kayıt tek adımda (atomik) yapılır.
     """
-    key = f"chat:{mode}:{user_id}:{_client_ip(request)}"
-    if not rate_limiter.is_allowed(
-        key,
-        settings.CHAT_RATE_LIMIT_ATTEMPTS,
-        settings.CHAT_RATE_LIMIT_WINDOW_SECONDS,
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=_RATE_LIMIT_MESSAGE,
-        )
-    rate_limiter.record(key, settings.CHAT_RATE_LIMIT_WINDOW_SECONDS)
+    enforce_user_rate_limit(
+        request,
+        user_id,
+        scope=f"chat:{mode}",
+        attempts=settings.CHAT_RATE_LIMIT_ATTEMPTS,
+        window_seconds=settings.CHAT_RATE_LIMIT_WINDOW_SECONDS,
+    )
 
 
 def _resolve_model(

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, Bot, Trash2 } from "lucide-react";
 import { apiFetch, getErrorMessage } from "../lib/api";
+import { readChatHistory, persistChatHistory } from "../lib/chatHistory";
 import { useAuth } from "../context/AuthContext";
 import { glass as g, ui } from "../lib/ui";
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -18,28 +19,17 @@ interface GeneralChatResponse {
 const MAX_HISTORY_MESSAGES = 30;
 
 // Normal sohbet geçmişi RAG sohbetinden AYRI bir anahtarla saklanır.
+// Okuma/yazma (şema doğrulamalı) lib/chatHistory içinde ortaktır; sayfa
+// ProtectedRoute altında (istemcide) mount edildiği için ilk render'da
+// localStorage erişilebilir durumdadır.
 function historyKey(userId: number | undefined): string {
   return `localdoc_general_chat_${userId ?? "anon"}`;
-}
-
-// Kayıtlı geçmişi senkron okur. ChatContent yalnızca oturum doğrulandıktan
-// sonra (ProtectedRoute altında, istemcide) mount edildiği için ilk render'da
-// localStorage erişilebilir durumdadır.
-function readHistory(userId: number | undefined): ChatMessage[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(historyKey(userId));
-    return raw ? (JSON.parse(raw) as ChatMessage[]) : [];
-  } catch {
-    // Bozuk/eski veri: yok say.
-    return [];
-  }
 }
 
 function GeneralChatContent() {
   const { user, token } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
-    readHistory(user?.id),
+    readChatHistory(historyKey(user?.id)),
   );
   const [modelId, setModelId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,11 +40,7 @@ function GeneralChatContent() {
   // Mesajlar değiştikçe geçmişi kaydet.
   useEffect(() => {
     if (!user) return;
-    try {
-      window.localStorage.setItem(historyKey(user.id), JSON.stringify(messages));
-    } catch {
-      // Depolama dolu/erişilemez: sessizce geç.
-    }
+    persistChatHistory(historyKey(user.id), messages);
   }, [messages, user]);
 
   function clearHistory() {

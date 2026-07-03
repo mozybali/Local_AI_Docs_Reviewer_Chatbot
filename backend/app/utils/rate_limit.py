@@ -1,8 +1,9 @@
-"""Basit bellek içi rate limiter (brute-force MVP koruması).
+"""Basit bellek içi rate limiter (brute-force / kaynak tüketimi MVP koruması).
 
-`/auth/login` ve `/auth/register` uçlarını kaba kuvvet denemelerine karşı
-korur. Kayan pencere (sliding window) yaklaşımı kullanılır: her anahtar için
-son `window_seconds` içindeki olay zamanları tutulur.
+`/auth/login`, `/auth/register`, chat, upload ve search uçlarını kaba kuvvet
+ve kaynak tüketimi denemelerine karşı korur. Kayan pencere (sliding window)
+yaklaşımı kullanılır: her anahtar için son `window_seconds` içindeki olay
+zamanları tutulur.
 
 Sınırlamalar (bilinçli MVP tercihi, yeni bağımlılık eklememek için):
 - Süreç içi (in-memory) çalışır; birden fazla worker/instance'ta sayaçlar
@@ -37,6 +38,22 @@ class SlidingWindowRateLimiter:
         with self._lock:
             events = self._prune(key, window_seconds, now)
             return len(events) < limit
+
+    def hit(self, key: str, limit: int, window_seconds: float) -> bool:
+        """Limiti kontrol eder ve izin veriliyorsa denemeyi ATOMİK kaydeder.
+
+        `is_allowed` + `record` ikilisi iki ayrı kilit aldığı için eş zamanlı
+        isteklerde limitin üstüne taşabilir; her denemenin sayılması gereken
+        uçlar (chat/register/upload/search) bu tek-kilit sürümü kullanmalıdır.
+        Reddedilen denemeler pencereyi uzatmaz (kaydedilmez).
+        """
+        now = time.monotonic()
+        with self._lock:
+            events = self._prune(key, window_seconds, now)
+            if len(events) >= limit:
+                return False
+            events.append(now)
+            return True
 
     def record(self, key: str, window_seconds: float) -> None:
         """Anahtar için yeni bir olay (deneme) kaydeder."""

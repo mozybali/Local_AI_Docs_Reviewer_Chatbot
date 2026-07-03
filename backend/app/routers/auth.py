@@ -82,8 +82,9 @@ def register(
     payload: UserCreate, request: Request, db: Session = Depends(get_db)
 ) -> User:
     """Yeni kullanıcı kaydı oluşturur. Varsayılan rol `user`'dır."""
+    # Kontrol + kayıt tek adımda (atomik): eş zamanlı isteklerle limit aşılamaz.
     limit_key = f"register:{_client_ip(request)}"
-    if not rate_limiter.is_allowed(
+    if not rate_limiter.hit(
         limit_key,
         settings.REGISTER_RATE_LIMIT_ATTEMPTS,
         settings.REGISTER_RATE_LIMIT_WINDOW_SECONDS,
@@ -92,7 +93,6 @@ def register(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=_RATE_LIMIT_MESSAGE,
         )
-    rate_limiter.record(limit_key, settings.REGISTER_RATE_LIMIT_WINDOW_SECONDS)
 
     if auth_service.get_user_by_email(db, payload.email) is not None:
         raise HTTPException(

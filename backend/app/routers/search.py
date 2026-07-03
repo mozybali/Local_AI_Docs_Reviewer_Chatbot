@@ -9,16 +9,17 @@ sağlanır; bir kullanıcının araması asla başka kullanıcının chunk'ları
 döndürmez.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.database import get_db
 from app.models.user import User
 from app.services import retrieval_service
 from app.services.embedding_service import EmbeddingError
 from app.services.vector_store import VectorStoreError
-from app.utils.dependencies import get_current_user
+from app.utils.dependencies import enforce_user_rate_limit, get_current_user
 
 router = APIRouter(prefix="/search", tags=["search"])
 
@@ -51,10 +52,20 @@ class SearchResponse(BaseModel):
 @router.post("", response_model=SearchResponse)
 def semantic_search(
     payload: SearchRequest,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> SearchResponse:
     """Kullanıcının dokümanları içinde top-k anlamsal arama yapar."""
+    # Her arama bir embedding + vektör sorgusu çalıştırır; kullanıcı + IP
+    # başına sıklık sınırlanır (aşımda 429).
+    enforce_user_rate_limit(
+        request,
+        current_user.id,
+        scope="search",
+        attempts=settings.SEARCH_RATE_LIMIT_ATTEMPTS,
+        window_seconds=settings.SEARCH_RATE_LIMIT_WINDOW_SECONDS,
+    )
     try:
         chunks = retrieval_service.search_chunks(
             db=db,

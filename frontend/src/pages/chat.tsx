@@ -10,6 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { apiFetch, getErrorMessage } from "../lib/api";
+import { readChatHistory, persistChatHistory } from "../lib/chatHistory";
 import { useAuth } from "../context/AuthContext";
 import { glass as g, tokens as t, ui } from "../lib/ui";
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -26,22 +27,11 @@ interface ChatResponse {
 }
 
 // Sohbet geçmişi kullanıcı bazlı saklanır (Hafta 6 — sohbet geçmişi).
+// Okuma/yazma (şema doğrulamalı) lib/chatHistory içinde ortaktır. ChatContent
+// yalnızca oturum doğrulandıktan sonra (ProtectedRoute altında, istemcide)
+// mount edildiği için ilk render'da localStorage erişilebilir durumdadır.
 function historyKey(userId: number | undefined): string {
   return `localdoc_chat_${userId ?? "anon"}`;
-}
-
-// Kayıtlı geçmişi senkron okur. ChatContent yalnızca oturum doğrulandıktan
-// sonra (ProtectedRoute altında, istemcide) mount edildiği için ilk render'da
-// localStorage erişilebilir durumdadır; ayrıca bir yükleme efekti gerekmez.
-function readHistory(userId: number | undefined): ChatMessage[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(historyKey(userId));
-    return raw ? (JSON.parse(raw) as ChatMessage[]) : [];
-  } catch {
-    // Bozuk/eski veri: yok say.
-    return [];
-  }
 }
 
 function ChatContent() {
@@ -51,7 +41,7 @@ function ChatContent() {
   // Seçili model id'si; ModelSelector varsayılanı backend'den alıp doldurur.
   const [modelId, setModelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
-    readHistory(user?.id),
+    readChatHistory(historyKey(user?.id)),
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,11 +57,7 @@ function ChatContent() {
   // Mesajlar değiştikçe geçmişi kaydet.
   useEffect(() => {
     if (!user) return;
-    try {
-      window.localStorage.setItem(historyKey(user.id), JSON.stringify(messages));
-    } catch {
-      // Depolama dolu/erişilemez: sessizce geç.
-    }
+    persistChatHistory(historyKey(user.id), messages);
   }, [messages, user]);
 
   // setState'ler promise callback'lerinde çalışır; böylece efekt gövdesinden

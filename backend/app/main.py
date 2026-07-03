@@ -16,8 +16,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import models  # noqa: F401  -- tüm ORM mapper'larını (User/Document/Chunk) kaydeder
 from app.config import settings, validate_security_settings
+from app.database import SessionLocal
 from app.routers import admin, auth, chat, documents, search
 from app.seed import seed_admin_user
+from app.services.document_service import recover_stale_documents
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,10 +33,15 @@ async def lifespan(app: FastAPI):
       ortamında başlatmayı engeller; development'ta uyarı loglanır.
     - Şema oluşturma/güncelleme artık Alembic'in sorumluluğundadır; başlangıçta
       `create_all` çağrılmaz. Tablolar yoksa `alembic upgrade head` çalıştırın.
+    - Önceki süreçte yarıda kalmış (`uploaded`/`processing`) dokümanlar `error`
+      durumuna alınır; işleme kuyruğu süreç içi olduğundan bu görevler bir daha
+      çalışmaz ve işaretlenmezlerse arayüzde sonsuza dek "İşleniyor" görünür.
     """
     for warning in validate_security_settings(settings):
         logger.warning("GÜVENLİK UYARISI: %s", warning)
     seed_admin_user()
+    with SessionLocal() as db:
+        recover_stale_documents(db)
     logger.info("Başlangıç hazır.")
     yield
 

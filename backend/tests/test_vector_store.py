@@ -114,6 +114,26 @@ def test_page_none_roundtrips(isolated_collection):
     assert top.page_number is None
 
 
+def test_add_vectors_batches_large_record_sets(isolated_collection, monkeypatch):
+    """Kayıt sayısı dilim boyutunu aşınca upsert parçalanır ama hepsi yazılır.
+
+    ChromaDB tek çağrıda ~5461 kayıt kabul eder; `add_vectors` bu sınırı
+    aşmamak için `_UPSERT_BATCH_SIZE` dilimleriyle yazar. Test, dilim boyutunu
+    küçülterek çok dilimli yolu gerçek koleksiyon üzerinde doğrular.
+    """
+    monkeypatch.setattr(vs, "_UPSERT_BATCH_SIZE", 2)
+    records = [
+        vs.VectorRecord(f"docB_chunk{i}", [float(i), 1.0, 0.0], f"parca {i}",
+                        user_id=7, document_id=70, chunk_index=i, page_number=1)
+        for i in range(5)
+    ]
+    vs.add_vectors(records)
+
+    assert vs.count_by_document(70) == 5
+    results = vs.search([0.0, 1.0, 0.0], user_id=7, top_k=10)
+    assert {m.vector_id for m in results} == {f"docB_chunk{i}" for i in range(5)}
+
+
 def test_build_where_single_and_combined():
     assert vs._build_where(5, None) == {"user_id": 5}
     combined = vs._build_where(5, [1, 2])

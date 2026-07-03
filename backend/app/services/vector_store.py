@@ -36,6 +36,12 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 
 _client_lock = threading.Lock()
 
+# ChromaDB (SQLite backend) tek çağrıda ~5461 kayıt kabul eder
+# (client.get_max_batch_size()); üstü ValueError ile reddedilir. Büyük
+# dokümanlar (ör. 50MB TXT binlerce chunk üretir) bu sınırı aşabileceğinden
+# upsert güvenli bir dilim boyutuyla parçalanır.
+_UPSERT_BATCH_SIZE = 4096
+
 
 class VectorStoreError(Exception):
     """Vektör deposu işlemleri sırasında oluşan hata."""
@@ -112,28 +118,34 @@ def add_vectors(records: list[VectorRecord]) -> None:
     """Vektör kayıtlarını metadata ile birlikte ChromaDB'ye yazar.
 
     Aynı `vector_id` ile çağrılırsa kayıt güncellenir (upsert), böylece
-    yeniden işleme mükerrer vektör oluşturmaz.
+    yeniden işleme mükerrer vektör oluşturmaz. Kayıtlar ChromaDB'nin tek
+    çağrı sınırını aşmamak için `_UPSERT_BATCH_SIZE` boyutlu dilimler halinde
+    yazılır; `vector_id` deterministik olduğundan yarıda kalan bir yazım
+    yeniden çalıştırmada güvenle tamamlanır (idempotent).
     """
     if not records:
         return
 
     collection = get_collection()
     try:
-        collection.upsert(
-            ids=[r.vector_id for r in records],
-            embeddings=[r.embedding for r in records],
-            documents=[r.text for r in records],
-            metadatas=[
-                {
-                    "user_id": r.user_id,
-                    "document_id": r.document_id,
-                    "chunk_index": r.chunk_index,
-                    # ChromaDB None metadata kabul etmez; -1 "sayfa yok" demektir.
-                    "page": r.page_number if r.page_number is not None else -1,
-                }
-                for r in records
-            ],
-        )
+        for start in range(0, len(records), _UPSERT_BATCH_SIZE):
+            batch = records[start : start + _UPSERT_BATCH_SIZE]
+            collection.upsert(
+                ids=[r.vector_id for r in batch],
+                embeddings=[r.embedding for r in batch],
+                documents=[r.text for r in batch],
+                metadatas=[
+                    {
+                        "user_id": r.user_id,
+                        "document_id": r.document_id,
+                        "chunk_index": r.chunk_index,
+                        # ChromaDB None metadata kabul etmez; -1 "sayfa yok"
+                        # demektir.
+                        "page": r.page_number if r.page_number is not None else -1,
+                    }
+                    for r in batch
+                ],
+            )
     except Exception as exc:
         raise VectorStoreError(
             "Vektörler ChromaDB'ye yazılırken hata oluştu."

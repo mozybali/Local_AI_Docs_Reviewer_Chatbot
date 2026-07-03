@@ -10,12 +10,48 @@ from __future__ import annotations
 
 import logging
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.document import Document
 from app.services import file_service, vector_store
 
 logger = logging.getLogger(__name__)
+
+# İşleme kuyruğu süreç içi (BackgroundTasks) olduğundan, sunucu kapanınca bu
+# durumlardaki dokümanların görevi bir daha ASLA çalışmaz; başlangıçta `error`
+# durumuna alınmazlarsa arayüzde sonsuza dek "İşleniyor" görünürler.
+_STALE_STATUSES = ("uploaded", "processing")
+
+_STALE_ERROR_MESSAGE = (
+    "İşleme, sunucu yeniden başlatıldığı için yarıda kaldı. "
+    "Lütfen dokümanı silip yeniden yükleyin."
+)
+
+
+def recover_stale_documents(db: Session) -> int:
+    """Başlangıçta yarıda kalmış (`uploaded`/`processing`) dokümanları işaretler.
+
+    Tek instance varsayımıyla çalışır (rate limiter ile aynı MVP varsayımı):
+    uygulama başlarken bu durumda görünen her doküman, önceki sürecin yarıda
+    kalan işidir. `error` durumuna alınır ki kullanıcı durumu görüp yeniden
+    yükleyebilsin (ya da `scripts/reindex.py --fix` ile onarılabilsin).
+    İşaretlenen doküman sayısını döner.
+    """
+    stale = db.scalars(
+        select(Document).where(Document.status.in_(_STALE_STATUSES))
+    ).all()
+    for document in stale:
+        document.status = "error"
+        document.error_msg = _STALE_ERROR_MESSAGE
+    if stale:
+        db.commit()
+        logger.warning(
+            "Yarıda kalmış %s doküman 'error' durumuna alındı: %s",
+            len(stale),
+            [d.id for d in stale],
+        )
+    return len(stale)
 
 
 def delete_document_fully(db: Session, document: Document) -> None:

@@ -138,6 +138,10 @@ def _extract_pdf_with_pdfplumber(file_path: str) -> list[ExtractedPage] | None:
             for index, page in enumerate(pdf.pages, start=1):
                 text = page.extract_text() or ""
                 pages.append(ExtractedPage(page_number=index, text=text.strip()))
+                # pdfplumber sayfa nesneleri layout cache'i biriktirir; büyük
+                # PDF'lerde bellek sayfa sayısıyla büyür. Metni aldıktan sonra
+                # cache bırakılır (sayfa başına sabit bellek).
+                page.flush_cache()
         return pages
     except Exception:
         return None

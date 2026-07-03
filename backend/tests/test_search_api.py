@@ -17,6 +17,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.config import settings
 from app.database import Base, get_db
 from app.models.document import Document
 from app.models.user import User
@@ -25,7 +26,16 @@ from app.services import retrieval_service
 from app.services.embedding_service import EmbeddingError
 from app.services.retrieval_service import RetrievedChunk
 from app.services.vector_store import VectorStoreError
+from app.utils.rate_limit import rate_limiter
 from app.utils.security import create_access_token, hash_password
+
+
+@pytest.fixture(autouse=True)
+def _clean_rate_limiter():
+    """Global limiter durumunu testler arasında sıfırlar (search limitli)."""
+    rate_limiter.clear()
+    yield
+    rate_limiter.clear()
 
 
 @pytest.fixture()
@@ -174,3 +184,20 @@ def test_search_ignores_other_users_document_ids(client, monkeypatch):
     assert res.status_code == 200
     assert res.json()["results"] == []
     assert called["vector_search"] is False
+
+
+def test_search_rate_limit_returns_429(client, monkeypatch):
+    """Kullanıcı + IP başına arama sıklığı sınırlıdır (aşımda 429)."""
+    monkeypatch.setattr(settings, "SEARCH_RATE_LIMIT_ATTEMPTS", 2)
+    monkeypatch.setattr(
+        retrieval_service, "search_chunks", lambda **kwargs: []
+    )
+
+    for _ in range(2):
+        res = client.post(
+            "/search", json={"question": "soru"}, headers=_auth(1)
+        )
+        assert res.status_code == 200
+
+    res = client.post("/search", json={"question": "soru"}, headers=_auth(1))
+    assert res.status_code == 429

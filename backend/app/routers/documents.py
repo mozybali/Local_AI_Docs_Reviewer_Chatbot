@@ -20,6 +20,7 @@ from fastapi import (
     Depends,
     File,
     HTTPException,
+    Request,
     UploadFile,
     status,
 )
@@ -27,6 +28,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.database import get_db
 from app.models.chunk import Chunk
 from app.models.document import Document
@@ -34,7 +36,7 @@ from app.models.user import User
 from app.services import file_service
 from app.services.document_processor import process_document
 from app.services.document_service import delete_document_fully
-from app.utils.dependencies import get_current_user
+from app.utils.dependencies import enforce_user_rate_limit, get_current_user
 from app.utils.file_validation import (
     FileValidationError,
     read_upload_limited,
@@ -92,6 +94,7 @@ def _get_owned_document(db: Session, document_id: int, user: User) -> Document:
     status_code=status.HTTP_202_ACCEPTED,
 )
 def upload_document(
+    request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
@@ -102,6 +105,16 @@ def upload_document(
     Yanıt, işleme tamamlanmadan `202 Accepted` döner; ilerleme durum
     endpoint'i ile takip edilir.
     """
+    # 0) Rate limit: işleme (metin çıkarma + embedding) maliyetli olduğundan
+    #    kullanıcı + IP başına yükleme sıklığı sınırlanır (aşımda 429).
+    enforce_user_rate_limit(
+        request,
+        current_user.id,
+        scope="upload",
+        attempts=settings.UPLOAD_RATE_LIMIT_ATTEMPTS,
+        window_seconds=settings.UPLOAD_RATE_LIMIT_WINDOW_SECONDS,
+    )
+
     # 1) Doğrulama: boyut sınırı okuma sırasında uygulanır (tamamı belleğe
     #    alınmadan), ardından uzantı/MIME/boş dosya kontrolleri yapılır.
     try:

@@ -58,8 +58,10 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE: float = 0.2
     # ÇIKTI token limiti (max_tokens). Bağlam penceresi DEĞİLDİR; bağlam
     # penceresi için LLM_CONTEXT_WINDOW / model tanımındaki context_window
-    # kullanılır (Hafta 6). Bu iki kavram karıştırılmamalıdır.
-    LLM_MAX_TOKENS: int = 130000
+    # kullanılır (Hafta 6). Bu iki kavram karıştırılmamalıdır. Varsayılan,
+    # `.env.example` ile uyumludur; yüksek bir değer girdi (bağlam) bütçesini
+    # daraltır (bkz. llm_service.input_token_budget).
+    LLM_MAX_TOKENS: int = 1024
     # Varsayılan (legacy) modelin bağlam penceresi (token). LLM_ALLOWED_MODELS
     # tanımlı değilken tek varsayılan model bu değerle üretilir. Varsayılan,
     # LLM_MAX_TOKENS'ın eski yüksek varsayılanını da barındıracak genişliktedir.
@@ -112,6 +114,16 @@ class Settings(BaseSettings):
     # için login limitinden daha geniş ama yine de sınırlı tutulur.
     CHAT_RATE_LIMIT_ATTEMPTS: int = 30
     CHAT_RATE_LIMIT_WINDOW_SECONDS: int = 300
+
+    # Upload rate limit: dosya işleme (metin çıkarma + embedding) maliyetli
+    # olduğundan kullanıcı + IP başına pencere içindeki yükleme sayısı sınırlıdır.
+    UPLOAD_RATE_LIMIT_ATTEMPTS: int = 20
+    UPLOAD_RATE_LIMIT_WINDOW_SECONDS: int = 600
+
+    # Semantik arama rate limit: her istek embedding + vektör sorgusu çalıştırır;
+    # chat limitinden geniş ama sınırsız değil.
+    SEARCH_RATE_LIMIT_ATTEMPTS: int = 60
+    SEARCH_RATE_LIMIT_WINDOW_SECONDS: int = 300
 
     model_config = SettingsConfigDict(
         env_file=".env",
