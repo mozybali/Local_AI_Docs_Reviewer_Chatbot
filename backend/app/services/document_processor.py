@@ -27,15 +27,24 @@ açılır.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 
 from sqlalchemy import select
 
 from app.database import SessionLocal
 from app.models.chunk import Chunk
 from app.models.document import Document
-from app.services import embedding_service, vector_store
+from app.services import embedding_service, ocr_service, vector_store
 from app.services.chunker import chunk_pages
-from app.services.text_extractor import TextExtractionError, extract_pages
+from app.services.text_extractor import (
+    SOURCE_EMPTY,
+    SOURCE_FAILED,
+    SOURCE_NATIVE,
+    SOURCE_OCR,
+    ExtractedPage,
+    TextExtractionError,
+    extract_pages,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +52,77 @@ logger = logging.getLogger(__name__)
 def _vector_id(document_id: int, chunk_index: int) -> str:
     """Bir chunk için deterministik (yeniden işlemede kararlı) vektör kimliği."""
     return f"doc{document_id}_chunk{chunk_index}"
+
+
+@dataclass(frozen=True)
+class PageStats:
+    """Sayfa bazlı çıkarım istatistikleri (loglama + kullanıcı raporu)."""
+
+    total: int
+    native: int
+    ocr: int
+    empty: int
+    failed: int
+    failed_pages: tuple[int, ...]
+
+
+def _collect_page_stats(pages: list[ExtractedPage]) -> PageStats:
+    """Çıkarılan sayfalardan kaynak bazlı istatistik üretir."""
+    counts = {SOURCE_NATIVE: 0, SOURCE_OCR: 0, SOURCE_EMPTY: 0, SOURCE_FAILED: 0}
+    failed_pages: list[int] = []
+    for page in pages:
+        counts[page.source] = counts.get(page.source, 0) + 1
+        if page.source == SOURCE_FAILED:
+            failed_pages.append(page.page_number)
+    return PageStats(
+        total=len(pages),
+        native=counts[SOURCE_NATIVE],
+        ocr=counts[SOURCE_OCR],
+        empty=counts[SOURCE_EMPTY],
+        failed=counts[SOURCE_FAILED],
+        failed_pages=tuple(failed_pages),
+    )
+
+
+def _format_page_list(pages: tuple[int, ...], limit: int = 10) -> str:
+    """Sayfa listesini kullanıcı mesajı için kısaltarak biçimler."""
+    shown = ", ".join(str(p) for p in pages[:limit])
+    if len(pages) > limit:
+        shown += f" … (+{len(pages) - limit})"
+    return shown
+
+
+def _no_text_error_message(stats: PageStats) -> str:
+    """Hiç chunk üretilemediğinde nedene göre açıklayıcı hata mesajı üretir."""
+    if stats.failed > 0:
+        if not ocr_service.is_available():
+            return (
+                "Bu doküman taranmış görünüyor (metin katmanı yok) ve hiçbir "
+                "OCR motoru kullanılamıyor. Sunucuya Tesseract kurun veya "
+                "`pip install easyocr` çalıştırıp dokümanı yeniden işleyin."
+            )
+        return (
+            "Dokümandaki sayfalar OCR ile de okunamadı. Tarama kalitesi çok "
+            "düşük olabilir; daha yüksek çözünürlüklü bir kopya deneyin."
+        )
+    return "Dokümandan metin çıkarılamadı veya doküman boş."
+
+
+def _partial_warning_message(stats: PageStats) -> str | None:
+    """Kısmi başarı durumunda kullanıcıya gösterilecek uyarıyı üretir."""
+    if stats.failed <= 0:
+        return None
+    message = (
+        f"{stats.failed}/{stats.total} sayfadan metin çıkarılamadı "
+        f"(sayfa: {_format_page_list(stats.failed_pages)}). "
+        "Bu sayfalar aramaya dahil değildir."
+    )
+    if not ocr_service.is_available():
+        message += (
+            " OCR motoru kurulamadığı için taranmış sayfalar okunamadı; "
+            "Tesseract veya EasyOCR kurup 'Yeniden işle' deneyin."
+        )
+    return message
 
 
 def process_document(document_id: int) -> None:
@@ -56,29 +136,74 @@ def process_document(document_id: int) -> None:
 
         document.status = "processing"
         document.error_msg = None
+        document.warning_msg = None
         db.commit()
 
         try:
             pages = extract_pages(document.file_path, document.file_type)
-            chunks = chunk_pages(pages)
+            stats = _collect_page_stats(pages)
+            logger.info(
+                "Sayfa raporu: id=%s toplam=%s native=%s ocr=%s bos=%s "
+                "basarisiz=%s%s",
+                document_id,
+                stats.total,
+                stats.native,
+                stats.ocr,
+                stats.empty,
+                stats.failed,
+                f" basarisiz_sayfalar={list(stats.failed_pages)}"
+                if stats.failed_pages
+                else "",
+            )
+
+            # Sayfa istatistiklerini kaydet (durumdan bağımsız gözlemlenebilirlik).
+            document.page_count = stats.total
+            document.pages_ocr = stats.ocr
+            document.pages_failed = stats.failed
+
+            # Chunk boyutunu embedding modelinin GERÇEK tokenizer'ı ile ölç ve
+            # modelin girdi limitiyle sınırla; böylece chunk'lar embedding
+            # sırasında sessizce kırpılmaz. Model yüklenemezse kelime vekiline
+            # düşülür (embed_texts zaten aynı modeli birazdan yükleyecek).
+            token_counter = embedding_service.try_get_token_counter()
+            max_tokens = embedding_service.try_get_max_seq_tokens()
+            chunks = chunk_pages(
+                pages, token_counter=token_counter, max_tokens=max_tokens
+            )
 
             if not chunks:
                 document.status = "error"
-                document.error_msg = (
-                    "Dokümandan metin çıkarılamadı veya doküman boş."
-                )
+                document.error_msg = _no_text_error_message(stats)
                 db.commit()
-                logger.info("Doküman boş/metin yok: id=%s", document_id)
+                logger.info(
+                    "Dokümandan hiç chunk üretilemedi: id=%s (%s)",
+                    document_id,
+                    document.error_msg,
+                )
                 return
+
+            # Kısmi başarı: bazı sayfalar okunamadıysa kullanıcıya raporlanır
+            # (doküman yine `ready` olur; okunabilen sayfalar aranabilir).
+            warning = _partial_warning_message(stats)
+            if warning:
+                logger.warning(
+                    "Kısmi çıkarım: id=%s %s", document_id, warning
+                )
 
             # Her chunk için embedding üret (toplu/batch).
             embeddings = embedding_service.embed_texts([c.text for c in chunks])
+
+            # Sayfa numarası -> çıkarım meta bilgisi (chunk metadata'sı için).
+            page_meta = {p.page_number: p for p in pages}
 
             # Chunk satırlarını ve ChromaDB vektör kayıtlarını birlikte hazırla.
             chunk_rows: list[Chunk] = []
             records: list[vector_store.VectorRecord] = []
             for chunk, embedding in zip(chunks, embeddings):
                 vid = _vector_id(document.id, chunk.chunk_index)
+                meta = page_meta.get(chunk.page_number)
+                source_type = meta.source if meta else None
+                ocr_confidence = meta.ocr_confidence if meta else None
                 chunk_rows.append(
                     Chunk(
                         document_id=document.id,
@@ -86,6 +211,8 @@ def process_document(document_id: int) -> None:
                         page_number=chunk.page_number,
                         chunk_index=chunk.chunk_index,
                         vector_id=vid,
+                        source_type=source_type,
+                        ocr_confidence=ocr_confidence,
                     )
                 )
                 records.append(
@@ -97,6 +224,8 @@ def process_document(document_id: int) -> None:
                         document_id=document.id,
                         chunk_index=chunk.chunk_index,
                         page_number=chunk.page_number,
+                        source_type=source_type,
+                        ocr_confidence=ocr_confidence,
                     )
                 )
 
@@ -138,9 +267,17 @@ def process_document(document_id: int) -> None:
             # 4) Her iki depo da tutarlı: ancak şimdi "ready".
             document.status = "ready"
             document.error_msg = None
+            document.warning_msg = warning
             db.commit()
             logger.info(
-                "Doküman işlendi: id=%s chunk_sayisi=%s", document_id, len(chunks)
+                "Doküman işlendi: id=%s chunk_sayisi=%s embedding_sayisi=%s "
+                "(native=%s ocr=%s basarisiz=%s)",
+                document_id,
+                len(chunks),
+                len(embeddings),
+                stats.native,
+                stats.ocr,
+                stats.failed,
             )
 
         except TextExtractionError as exc:
@@ -179,4 +316,5 @@ def _mark_error(db, document_id: int, message: str) -> None:
         return
     document.status = "error"
     document.error_msg = message
+    document.warning_msg = None
     db.commit()

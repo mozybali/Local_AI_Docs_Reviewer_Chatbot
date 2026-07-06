@@ -25,7 +25,7 @@ _STALE_STATUSES = ("uploaded", "processing")
 
 _STALE_ERROR_MESSAGE = (
     "İşleme, sunucu yeniden başlatıldığı için yarıda kaldı. "
-    "Lütfen dokümanı silip yeniden yükleyin."
+    "'Yeniden işle' ile tekrar deneyebilirsiniz."
 )
 
 

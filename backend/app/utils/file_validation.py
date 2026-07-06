@@ -42,6 +42,9 @@ class FileValidationError(Exception):
 _MAGIC_SIGNATURES: dict[str, tuple[bytes, ...]] = {
     "pdf": (b"%PDF",),
     "docx": (b"PK\x03\x04",),  # docx aslında bir zip arşividir
+    "png": (b"\x89PNG\r\n\x1a\n",),
+    "jpg": (b"\xff\xd8\xff",),
+    "jpeg": (b"\xff\xd8\xff",),
 }
 
 

@@ -255,7 +255,7 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
                         display: "inline-flex",
                         alignItems: "center",
                         gap: "0.35rem",
-                        color: user.role === "admin" ? t.color.amber : "#cbd5e1",
+                        color: user.role === "admin" ? t.color.amber : t.color.text,
                         fontWeight: 600,
                       }}
                     >
@@ -269,7 +269,7 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
                         display: "inline-flex",
                         alignItems: "center",
                         gap: "0.35rem",
-                        color: user.is_active ? "#86efac" : "#fca5a5",
+                        color: user.is_active ? t.color.emerald : t.color.danger,
                         fontSize: "0.8rem",
                         fontWeight: 600,
                       }}
@@ -377,7 +377,7 @@ export default function AdminPanel({ token, currentUserId }: AdminPanelProps) {
                     {doc.status === "error" && doc.error_msg && (
                       <div
                         style={{
-                          color: "#fca5a5",
+                          color: t.color.danger,
                           fontSize: "0.75rem",
                           marginTop: "0.3rem",
                           lineHeight: 1.45,
@@ -473,7 +473,7 @@ function StatCard({
           width: 38,
           height: 38,
           color: accent,
-          background: "rgba(148, 163, 184, 0.07)",
+          background: t.color.glassSoft,
           border: `1px solid ${t.color.borderStrong}`,
         }}
       >

@@ -14,6 +14,12 @@ httpx
 pypdf
 pdfplumber
 python-docx
+# OCR (tamamen lokal, API ücreti yok): sayfa render için pypdfium2
+# (pdfplumber'ın da bağımlılığı), motor olarak pytesseract (sistemde
+# tesseract kuruluysa) ve saf-pip alternatifi easyocr.
+pypdfium2
+pytesseract
+easyocr
 sentence-transformers
 chromadb
 pytest

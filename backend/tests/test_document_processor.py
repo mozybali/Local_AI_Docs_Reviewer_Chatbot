@@ -64,13 +64,35 @@ def isolated_collection():
 
 @pytest.fixture(autouse=True)
 def _patch_embeddings(monkeypatch):
-    """Embedding'i sabit 3 boyutlu vektörle taklit eder (model yüklenmez)."""
+    """Embedding'i sabit 3 boyutlu vektörle taklit eder (model yüklenmez).
+
+    Chunker'ın tokenizer erişimi de etkisizleştirilir; aksi halde
+    `try_get_token_counter` gerçek modeli indirmeye çalışır.
+    """
     monkeypatch.setattr(
         embedding_service, "embed_texts",
         lambda texts: [[1.0, 0.0, 0.0] for _ in texts],
     )
     monkeypatch.setattr(
         embedding_service, "embed_query", lambda text: [1.0, 0.0, 0.0]
+    )
+    monkeypatch.setattr(
+        embedding_service, "try_get_token_counter", lambda: None
+    )
+    monkeypatch.setattr(
+        embedding_service, "try_get_max_seq_tokens", lambda: None
+    )
+
+
+@pytest.fixture(autouse=True)
+def _patch_ocr_availability(monkeypatch):
+    """OCR motor kontrolünü stub'lar; testte gerçek motor başlatılmaz.
+
+    (`is_available` gerçek çağrıda EasyOCR/Tesseract kurulumunu tetikleyebilir;
+    uyarı mesajı kararları için sabit True yeterlidir.)
+    """
+    monkeypatch.setattr(
+        document_processor.ocr_service, "is_available", lambda: True
     )
 
 
@@ -122,6 +144,86 @@ def test_upload_process_vector_write_search(
         )
         assert results
         assert results[0].document == "izin.pdf"
+    finally:
+        db.close()
+
+
+def test_partial_extraction_sets_warning_and_stats(
+    test_session, isolated_collection, tmp_path, monkeypatch
+):
+    """Bazı sayfalar okunamadıysa doküman `ready` olur ama uyarı + istatistik taşır."""
+    from app.services.text_extractor import ExtractedPage
+
+    monkeypatch.setattr(document_processor, "SessionLocal", test_session)
+    doc_id = _seed_document(test_session, tmp_path)
+
+    pages = [
+        ExtractedPage(page_number=1, text="Birinci sayfanın normal metni burada."),
+        ExtractedPage(page_number=2, text="", source="failed"),
+        ExtractedPage(
+            page_number=3,
+            text="Üçüncü sayfa OCR ile okundu.",
+            source="ocr",
+            ocr_confidence=0.9,
+        ),
+    ]
+    monkeypatch.setattr(
+        document_processor, "extract_pages", lambda path, ftype: pages
+    )
+
+    document_processor.process_document(doc_id)
+
+    db = test_session()
+    try:
+        document = db.get(Document, doc_id)
+        assert document.status == "ready"
+        assert document.warning_msg is not None
+        assert "1/3" in document.warning_msg
+        assert document.page_count == 3
+        assert document.pages_ocr == 1
+        assert document.pages_failed == 1
+
+        # OCR sayfasından gelen chunk kaynak/güven metadata'sını taşımalı.
+        ocr_chunks = db.scalars(
+            select(Chunk).where(
+                Chunk.document_id == doc_id, Chunk.page_number == 3
+            )
+        ).all()
+        assert ocr_chunks
+        assert all(c.source_type == "ocr" for c in ocr_chunks)
+        assert all(c.ocr_confidence == 0.9 for c in ocr_chunks)
+    finally:
+        db.close()
+
+
+def test_all_pages_failed_without_ocr_gives_scanned_error(
+    test_session, isolated_collection, tmp_path, monkeypatch
+):
+    """Tüm sayfalar `failed` ve OCR yoksa hata mesajı taranmış PDF'i açıklamalı."""
+    from app.services.text_extractor import ExtractedPage
+
+    monkeypatch.setattr(document_processor, "SessionLocal", test_session)
+    doc_id = _seed_document(test_session, tmp_path)
+
+    pages = [
+        ExtractedPage(page_number=1, text="", source="failed"),
+        ExtractedPage(page_number=2, text="", source="failed"),
+    ]
+    monkeypatch.setattr(
+        document_processor, "extract_pages", lambda path, ftype: pages
+    )
+    monkeypatch.setattr(
+        document_processor.ocr_service, "is_available", lambda: False
+    )
+
+    document_processor.process_document(doc_id)
+
+    db = test_session()
+    try:
+        document = db.get(Document, doc_id)
+        assert document.status == "error"
+        assert "taranmış" in document.error_msg
+        assert document.pages_failed == 2
     finally:
         db.close()
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
 import { Database, FileText, Lock, ShieldCheck, Users } from "lucide-react";
 import { glass as g, tokens as t } from "../lib/ui";
+import ThemeToggle from "./ThemeToggle";
 
 type Icon = ComponentType<{ size?: number; strokeWidth?: number; color?: string }>;
 
@@ -51,6 +52,11 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       <div className="ld-auth-orb ld-auth-orb--blue" aria-hidden="true" />
       <div className="ld-auth-orb ld-auth-orb--cyan" aria-hidden="true" />
 
+      {/* Tema anahtarı — sağ üst köşe */}
+      <div style={{ position: "absolute", top: "1.1rem", right: "1.1rem", zIndex: 2 }}>
+        <ThemeToggle />
+      </div>
+
       <div className="ld-auth-grid">
         {/* Mobil: tanıtım paneli gizliyken görünen marka satırı */}
         <div className="ld-auth-mobile-brand">
@@ -67,7 +73,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           className="ld-auth-side ld-glass"
           style={{
             ...g.glassPanel,
-            background: `radial-gradient(420px 260px at 20% 0%, rgba(37, 99, 235, 0.18), transparent 70%), ${t.color.glass}`,
+            background: `radial-gradient(420px 260px at 20% 0%, var(--ld-primary-tint-strong), transparent 70%), ${t.color.surface}`,
             padding: "2.25rem 2rem",
             display: "flex",
             flexDirection: "column",
@@ -213,7 +219,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           height: 420px;
           top: -120px;
           right: -80px;
-          background: rgba(37, 99, 235, 0.16);
+          background: var(--ld-glow-b);
           animation: ld-float 9s ease-in-out infinite;
         }
         .ld-auth-orb--cyan {
@@ -221,7 +227,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           height: 340px;
           bottom: -110px;
           left: -70px;
-          background: rgba(34, 211, 238, 0.1);
+          background: var(--ld-glow-a);
           animation: ld-float 11s ease-in-out infinite reverse;
         }
         @media (max-width: 760px) {

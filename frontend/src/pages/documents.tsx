@@ -18,6 +18,7 @@ function DocumentsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [reprocessingId, setReprocessingId] = useState<number | null>(null);
   // Silme onayı bekleyen doküman; ConfirmDialog bu state ile açılır.
   const [pendingDelete, setPendingDelete] = useState<DocumentItem | null>(null);
 
@@ -53,6 +54,21 @@ function DocumentsContent() {
   function handleDelete(id: number) {
     const doc = documents.find((d) => d.id === id);
     if (doc) setPendingDelete(doc);
+  }
+
+  // Hatalı / kısmen işlenmiş dokümanı yeniden işleme kuyruğuna alır
+  // (dosya diskte durduğu için yeniden yükleme gerekmez).
+  async function handleReprocess(id: number) {
+    setReprocessingId(id);
+    setError(null);
+    try {
+      await apiFetch(`/documents/${id}/reprocess`, { method: "POST", token });
+      await load(); // durum "uploaded/processing" olur; polling devralır
+    } catch (err) {
+      setError(getErrorMessage(err, "Doküman yeniden işlenemedi."));
+    } finally {
+      setReprocessingId(null);
+    }
   }
 
   async function confirmDelete() {
@@ -159,6 +175,8 @@ function DocumentsContent() {
               documents={documents}
               onDelete={handleDelete}
               deletingId={deletingId}
+              onReprocess={(id) => void handleReprocess(id)}
+              reprocessingId={reprocessingId}
             />
           )}
         </div>

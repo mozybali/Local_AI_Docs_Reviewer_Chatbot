@@ -58,6 +58,10 @@ class VectorRecord:
     document_id: int
     chunk_index: int
     page_number: int | None
+    # İçeriğin kaynağı ("native"/"ocr") ve OCR ortalama güveni (0-1). Kalite
+    # analizi ve ileride kaynak bazlı filtreleme için metadata'ya yazılır.
+    source_type: str | None = None
+    ocr_confidence: float | None = None
 
 
 @dataclass(frozen=True)
@@ -134,22 +138,30 @@ def add_vectors(records: list[VectorRecord]) -> None:
                 ids=[r.vector_id for r in batch],
                 embeddings=[r.embedding for r in batch],
                 documents=[r.text for r in batch],
-                metadatas=[
-                    {
-                        "user_id": r.user_id,
-                        "document_id": r.document_id,
-                        "chunk_index": r.chunk_index,
-                        # ChromaDB None metadata kabul etmez; -1 "sayfa yok"
-                        # demektir.
-                        "page": r.page_number if r.page_number is not None else -1,
-                    }
-                    for r in batch
-                ],
+                metadatas=[_record_metadata(r) for r in batch],
             )
     except Exception as exc:
         raise VectorStoreError(
             "Vektörler ChromaDB'ye yazılırken hata oluştu."
         ) from exc
+
+
+def _record_metadata(record: VectorRecord) -> dict[str, Any]:
+    """Bir kayıt için ChromaDB metadata sözlüğünü üretir.
+
+    ChromaDB None metadata değeri kabul etmediği için opsiyonel alanlar ya
+    sentinel ile (-1 = "sayfa yok") ya da alanı hiç yazmayarak temsil edilir.
+    """
+    metadata: dict[str, Any] = {
+        "user_id": record.user_id,
+        "document_id": record.document_id,
+        "chunk_index": record.chunk_index,
+        "page": record.page_number if record.page_number is not None else -1,
+        "source_type": record.source_type or "native",
+    }
+    if record.ocr_confidence is not None:
+        metadata["ocr_confidence"] = float(record.ocr_confidence)
+    return metadata
 
 
 def search(

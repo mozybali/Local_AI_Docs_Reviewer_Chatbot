@@ -32,8 +32,8 @@ class Settings(BaseSettings):
     # Dosya yükleme
     UPLOAD_DIR: str = "uploads"
     MAX_FILE_SIZE_MB: int = 50
-    # Hafta 2: PDF, TXT ve DOCX desteklenir (text_extractor python-docx kullanır).
-    ALLOWED_EXTENSIONS: str = "pdf,txt,docx"
+    # PDF, TXT, DOCX ve görüntü dosyaları (görüntüler OCR ile işlenir).
+    ALLOWED_EXTENSIONS: str = "pdf,txt,docx,png,jpg,jpeg"
 
     # Veritabanı
     DATABASE_URL: str = (
@@ -87,9 +87,31 @@ class Settings(BaseSettings):
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     )
 
+    # OCR (lokal, ücretsiz motorlar — hiçbir bulut/API çağrısı yapılmaz).
+    # Taranmış PDF sayfaları ve görüntü dosyaları için kullanılır. Motorlar:
+    #   auto      -> önce Tesseract (kuruluysa), yoksa EasyOCR (pip ile gelir)
+    #   tesseract -> yalnızca Tesseract (sistemde tesseract binary'si gerekir)
+    #   easyocr   -> yalnızca EasyOCR (ilk kullanımda modelleri lokal indirir)
+    #   off       -> OCR kapalı (taranmış sayfalar "failed" işaretlenir)
+    OCR_ENABLED: bool = True
+    OCR_ENGINE: str = "auto"
+    # Tesseract dil dizgesi; EasyOCR için otomatik eşlenir (tur->tr, eng->en).
+    OCR_LANGS: str = "tur+eng"
+    # Sayfa görüntüye çevrilirken kullanılan çözünürlük (OCR kalitesi/hızı dengesi).
+    OCR_RENDER_DPI: int = 300
+    # Bir sayfadan çıkan native metin bu karakter sayısının altındaysa sayfa
+    # "OCR adayı" sayılır (taranmış sayfa tespiti).
+    OCR_TRIGGER_MIN_CHARS: int = 32
+    # OCR ortalama güveni (0-1) bu değerin altındaysa sonuç çöp kabul edilir;
+    # sayfa "failed" işaretlenir (çöp metin embedding'e sokulmaz).
+    OCR_MIN_CONFIDENCE: float = 0.35
+
     # Chunking (Hafta 2-3)
     CHUNK_SIZE: int = 512
     CHUNK_OVERLAP: int = 50
+    # Bu kelime sayısının altındaki chunk'lar (sayfa numarası artefaktı gibi
+    # gürültü) embedding'e alınmaz.
+    CHUNK_MIN_WORDS: int = 3
     TOP_K: int = 5
     # Retrieval skor eşiği (Hafta 4): kosinüs benzerlik skoru (1.0 = en benzer)
     # bu değerin altında kalan eşleşmeler bağlama alınmaz. Böylece soru

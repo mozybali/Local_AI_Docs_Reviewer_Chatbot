@@ -69,11 +69,181 @@ export default function App({ Component, pageProps }: AppProps) {
         <Component {...pageProps} />
       </div>
       <style jsx global>{`
+        /* =====================================================
+           Renk paleti — aydınlık mod (varsayılan)
+           ===================================================== */
+        :root {
+          color-scheme: light;
+          --ld-bg: #f7f8fa; /* ana arka plan */
+          --ld-surface: #ffffff; /* ana yüzey / kart */
+          --ld-surface-2: #f1f4f8; /* ikincil yüzey */
+          --ld-text: #172033; /* ana metin */
+          --ld-text-muted: #5d667a; /* ikincil metin */
+          --ld-border: #d9dee7; /* ince border */
+          --ld-border-strong: #c7cfdc;
+          --ld-primary: #315bea; /* primary / CTA */
+          --ld-primary-hover: #284cc5;
+          --ld-primary-rgb: 49, 91, 234;
+          --ld-on-primary: #ffffff;
+          --ld-primary-tint: rgba(49, 91, 234, 0.08);
+          --ld-primary-tint-strong: rgba(49, 91, 234, 0.14);
+          --ld-primary-border: rgba(49, 91, 234, 0.3);
+          --ld-user-bubble: #eaf0ff; /* kullanıcı sohbet balonu */
+          --ld-user-bubble-text: #172033;
+          --ld-user-bubble-border: #d4e0fa;
+          --ld-assistant-bubble: #ffffff; /* asistan sohbet balonu */
+          --ld-code-bg: #eef1f5; /* kod bloğu */
+          --ld-focus-ring: #6d8cff; /* erişilebilir odak halkası */
+          --ld-focus-shadow: 0 0 0 3px rgba(109, 140, 255, 0.3);
+          --ld-nav-bg: rgba(255, 255, 255, 0.85);
+          --ld-backdrop: rgba(23, 32, 51, 0.45);
+          --ld-selection: rgba(49, 91, 234, 0.22);
+          --ld-scrollbar: rgba(93, 102, 122, 0.45);
+          --ld-scrollbar-hover: rgba(93, 102, 122, 0.65);
+          --ld-grid-line: rgba(23, 32, 51, 0.04);
+          --ld-glow-a: rgba(49, 91, 234, 0.07);
+          --ld-glow-b: rgba(109, 140, 255, 0.06);
+          --ld-veil: rgba(247, 248, 250, 0.92);
+          --ld-hover-filter: brightness(0.96);
+          --ld-shadow-panel: 0 1px 2px rgba(23, 32, 51, 0.04),
+            0 12px 32px rgba(23, 32, 51, 0.07);
+          --ld-shadow-soft: 0 6px 18px rgba(23, 32, 51, 0.06);
+          --ld-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+          --ld-shadow-primary: 0 6px 16px rgba(49, 91, 234, 0.24);
+          --ld-success: #047857;
+          --ld-success-bg: rgba(4, 120, 87, 0.08);
+          --ld-success-border: rgba(4, 120, 87, 0.28);
+          --ld-warning: #b45309;
+          --ld-warning-bg: rgba(180, 83, 9, 0.08);
+          --ld-warning-border: rgba(180, 83, 9, 0.28);
+          --ld-danger: #dc2626;
+          --ld-danger-bg: rgba(220, 38, 38, 0.07);
+          --ld-danger-border: rgba(220, 38, 38, 0.28);
+          --ld-danger-solid: #dc2626;
+          --ld-on-danger: #ffffff;
+          --ld-info: #0e7490;
+          --ld-info-bg: rgba(14, 116, 144, 0.08);
+          --ld-info-border: rgba(14, 116, 144, 0.26);
+        }
+        /* =====================================================
+           Renk paleti — karanlık mod
+           (_document.tsx'teki script data-theme'i ilk boyamadan
+           önce ayarlar; media query yalnızca JS'siz yedektir)
+           ===================================================== */
+        :root[data-theme="dark"] {
+          color-scheme: dark;
+          --ld-bg: #101419; /* ana arka plan */
+          --ld-surface: #171d24; /* ana yüzey / kart */
+          --ld-surface-2: #202833; /* ikincil yüzey */
+          --ld-text: #e7eaf0;
+          --ld-text-muted: #a9b1c1;
+          --ld-border: #2b3440;
+          --ld-border-strong: #37424f;
+          --ld-primary: #8ea7ff; /* soft periwinkle */
+          --ld-primary-hover: #a1b5ff;
+          --ld-primary-rgb: 142, 167, 255;
+          --ld-on-primary: #101419;
+          --ld-primary-tint: rgba(142, 167, 255, 0.1);
+          --ld-primary-tint-strong: rgba(142, 167, 255, 0.16);
+          --ld-primary-border: rgba(142, 167, 255, 0.32);
+          --ld-user-bubble: #23304a;
+          --ld-user-bubble-text: #e7eaf0;
+          --ld-user-bubble-border: #31415f;
+          --ld-assistant-bubble: #171d24;
+          --ld-code-bg: #0b1016;
+          --ld-focus-ring: #8ea7ff;
+          --ld-focus-shadow: 0 0 0 3px rgba(142, 167, 255, 0.28);
+          --ld-nav-bg: rgba(16, 20, 25, 0.82);
+          --ld-backdrop: rgba(4, 6, 10, 0.62);
+          --ld-selection: rgba(142, 167, 255, 0.32);
+          --ld-scrollbar: rgba(169, 177, 193, 0.3);
+          --ld-scrollbar-hover: rgba(169, 177, 193, 0.5);
+          --ld-grid-line: rgba(169, 177, 193, 0.045);
+          --ld-glow-a: rgba(142, 167, 255, 0.07);
+          --ld-glow-b: rgba(49, 91, 234, 0.1);
+          --ld-veil: rgba(16, 20, 25, 0.92);
+          --ld-hover-filter: brightness(1.1);
+          --ld-shadow-panel: inset 0 1px 0 rgba(255, 255, 255, 0.04),
+            0 16px 40px rgba(0, 0, 0, 0.45);
+          --ld-shadow-soft: 0 8px 22px rgba(0, 0, 0, 0.35);
+          --ld-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+          --ld-shadow-primary: 0 6px 16px rgba(142, 167, 255, 0.18);
+          --ld-success: #34d399;
+          --ld-success-bg: rgba(52, 211, 153, 0.1);
+          --ld-success-border: rgba(52, 211, 153, 0.3);
+          --ld-warning: #fbbf24;
+          --ld-warning-bg: rgba(251, 191, 36, 0.1);
+          --ld-warning-border: rgba(251, 191, 36, 0.3);
+          --ld-danger: #f87171;
+          --ld-danger-bg: rgba(248, 113, 113, 0.1);
+          --ld-danger-border: rgba(248, 113, 113, 0.3);
+          --ld-danger-solid: #dc2626;
+          --ld-on-danger: #ffffff;
+          --ld-info: #22d3ee;
+          --ld-info-bg: rgba(34, 211, 238, 0.08);
+          --ld-info-border: rgba(34, 211, 238, 0.28);
+        }
+        /* JS çalışmazsa sistem tercihi karanlıksa yine karanlık göster. */
+        @media (prefers-color-scheme: dark) {
+          :root:not([data-theme="light"]):not([data-theme="dark"]) {
+            color-scheme: dark;
+            --ld-bg: #101419;
+            --ld-surface: #171d24;
+            --ld-surface-2: #202833;
+            --ld-text: #e7eaf0;
+            --ld-text-muted: #a9b1c1;
+            --ld-border: #2b3440;
+            --ld-border-strong: #37424f;
+            --ld-primary: #8ea7ff;
+            --ld-primary-hover: #a1b5ff;
+            --ld-primary-rgb: 142, 167, 255;
+            --ld-on-primary: #101419;
+            --ld-primary-tint: rgba(142, 167, 255, 0.1);
+            --ld-primary-tint-strong: rgba(142, 167, 255, 0.16);
+            --ld-primary-border: rgba(142, 167, 255, 0.32);
+            --ld-user-bubble: #23304a;
+            --ld-user-bubble-text: #e7eaf0;
+            --ld-user-bubble-border: #31415f;
+            --ld-assistant-bubble: #171d24;
+            --ld-code-bg: #0b1016;
+            --ld-focus-ring: #8ea7ff;
+            --ld-focus-shadow: 0 0 0 3px rgba(142, 167, 255, 0.28);
+            --ld-nav-bg: rgba(16, 20, 25, 0.82);
+            --ld-backdrop: rgba(4, 6, 10, 0.62);
+            --ld-selection: rgba(142, 167, 255, 0.32);
+            --ld-scrollbar: rgba(169, 177, 193, 0.3);
+            --ld-scrollbar-hover: rgba(169, 177, 193, 0.5);
+            --ld-grid-line: rgba(169, 177, 193, 0.045);
+            --ld-glow-a: rgba(142, 167, 255, 0.07);
+            --ld-glow-b: rgba(49, 91, 234, 0.1);
+            --ld-veil: rgba(16, 20, 25, 0.92);
+            --ld-hover-filter: brightness(1.1);
+            --ld-shadow-panel: inset 0 1px 0 rgba(255, 255, 255, 0.04),
+              0 16px 40px rgba(0, 0, 0, 0.45);
+            --ld-shadow-soft: 0 8px 22px rgba(0, 0, 0, 0.35);
+            --ld-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            --ld-shadow-primary: 0 6px 16px rgba(142, 167, 255, 0.18);
+            --ld-success: #34d399;
+            --ld-success-bg: rgba(52, 211, 153, 0.1);
+            --ld-success-border: rgba(52, 211, 153, 0.3);
+            --ld-warning: #fbbf24;
+            --ld-warning-bg: rgba(251, 191, 36, 0.1);
+            --ld-warning-border: rgba(251, 191, 36, 0.3);
+            --ld-danger: #f87171;
+            --ld-danger-bg: rgba(248, 113, 113, 0.1);
+            --ld-danger-border: rgba(248, 113, 113, 0.3);
+            --ld-danger-solid: #dc2626;
+            --ld-on-danger: #ffffff;
+            --ld-info: #22d3ee;
+            --ld-info-bg: rgba(34, 211, 238, 0.08);
+            --ld-info-border: rgba(34, 211, 238, 0.28);
+          }
+        }
+
         * {
           box-sizing: border-box;
         }
         html {
-          color-scheme: dark;
           scroll-behavior: smooth;
         }
         html,
@@ -86,11 +256,11 @@ export default function App({ Component, pageProps }: AppProps) {
             "Segoe UI",
             Roboto,
             sans-serif;
-          background: #05070d;
-          color: #e2e8f0;
+          background: var(--ld-bg);
+          color: var(--ld-text);
           -webkit-font-smoothing: antialiased;
         }
-        /* Sabit, katmanlı ışık zemini: mavi + cyan halkalar koyu lacivert üzerinde. */
+        /* Sabit, katmanlı zemin: paletin primary tonlarında yumuşak ışımalar. */
         body::before {
           content: "";
           position: fixed;
@@ -100,20 +270,20 @@ export default function App({ Component, pageProps }: AppProps) {
           background:
             radial-gradient(
               1200px 760px at 82% -12%,
-              rgba(37, 99, 235, 0.17),
+              var(--ld-glow-a),
               transparent 60%
             ),
             radial-gradient(
               1000px 620px at -4% 4%,
-              rgba(34, 211, 238, 0.09),
+              var(--ld-glow-b),
               transparent 55%
             ),
             radial-gradient(
               900px 700px at 50% 118%,
-              rgba(37, 99, 235, 0.1),
+              var(--ld-glow-a),
               transparent 60%
             ),
-            linear-gradient(180deg, #070b16 0%, #04060d 100%);
+            var(--ld-bg);
         }
         /* Üstte hafifçe görünen teknik grid dokusu. */
         body::after {
@@ -123,12 +293,8 @@ export default function App({ Component, pageProps }: AppProps) {
           z-index: -1;
           pointer-events: none;
           background-image:
-            linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
-            linear-gradient(
-              90deg,
-              rgba(148, 163, 184, 0.045) 1px,
-              transparent 1px
-            );
+            linear-gradient(var(--ld-grid-line) 1px, transparent 1px),
+            linear-gradient(90deg, var(--ld-grid-line) 1px, transparent 1px);
           background-size: 44px 44px;
           -webkit-mask-image: radial-gradient(
             ellipse 85% 55% at 50% 0%,
@@ -143,14 +309,13 @@ export default function App({ Component, pageProps }: AppProps) {
         }
 
         ::selection {
-          background: rgba(37, 99, 235, 0.5);
-          color: #eff6ff;
+          background: var(--ld-selection);
         }
 
-        /* İnce, koyu temaya uyumlu scrollbar. */
+        /* İnce, temaya uyumlu scrollbar. */
         * {
           scrollbar-width: thin;
-          scrollbar-color: rgba(71, 85, 105, 0.6) transparent;
+          scrollbar-color: var(--ld-scrollbar) transparent;
         }
         ::-webkit-scrollbar {
           width: 10px;
@@ -160,19 +325,19 @@ export default function App({ Component, pageProps }: AppProps) {
           background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(71, 85, 105, 0.55);
+          background: var(--ld-scrollbar);
           border-radius: 999px;
           border: 3px solid transparent;
           background-clip: padding-box;
         }
         ::-webkit-scrollbar-thumb:hover {
-          background: rgba(100, 116, 139, 0.75);
+          background: var(--ld-scrollbar-hover);
           border: 3px solid transparent;
           background-clip: padding-box;
         }
 
         a {
-          color: #60a5fa;
+          color: var(--ld-primary);
         }
         input,
         button,
@@ -186,7 +351,7 @@ export default function App({ Component, pageProps }: AppProps) {
           outline: none;
         }
         :focus-visible {
-          outline: 2px solid rgba(96, 165, 250, 0.75);
+          outline: 2px solid var(--ld-focus-ring);
           outline-offset: 2px;
           border-radius: 4px;
         }
@@ -202,7 +367,7 @@ export default function App({ Component, pageProps }: AppProps) {
             color 0.15s ease;
         }
         button:not(:disabled):hover {
-          filter: brightness(1.08);
+          filter: var(--ld-hover-filter);
         }
         button:not(:disabled):active {
           transform: translateY(1px);
@@ -216,10 +381,8 @@ export default function App({ Component, pageProps }: AppProps) {
         }
         input:focus,
         textarea:focus {
-          border-color: rgba(96, 165, 250, 0.75) !important;
-          box-shadow:
-            0 0 0 3px rgba(37, 99, 235, 0.25),
-            inset 0 1px 0 rgba(255, 255, 255, 0.06);
+          border-color: var(--ld-focus-ring) !important;
+          box-shadow: var(--ld-focus-shadow);
         }
 
         /* --- Liquid glass yardımcıları --- */
@@ -246,10 +409,8 @@ export default function App({ Component, pageProps }: AppProps) {
         }
         .ld-hover-card:hover {
           transform: translateY(-2px);
-          border-color: rgba(96, 165, 250, 0.45) !important;
-          box-shadow:
-            0 16px 40px rgba(2, 6, 16, 0.55),
-            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          border-color: var(--ld-primary-border) !important;
+          box-shadow: var(--ld-shadow-panel);
         }
         .ld-btn:not(:disabled):hover {
           transform: translateY(-1px);
@@ -426,7 +587,7 @@ export default function App({ Component, pageProps }: AppProps) {
             transform: translateY(0) scale(1);
           }
         }
-        /* Geçiş perdesi: markalı ışımalı koyu katman. Cover'da ekranı kaplar,
+        /* Geçiş perdesi: markalı ışımalı katman. Cover'da ekranı kaplar,
            reveal'da yeni sayfanın üzerinden yumuşakça çekilir. */
         .ld-route-veil {
           position: fixed;
@@ -436,15 +597,15 @@ export default function App({ Component, pageProps }: AppProps) {
           background:
             radial-gradient(
               900px 480px at 50% -10%,
-              rgba(37, 99, 235, 0.28),
+              rgba(var(--ld-primary-rgb), 0.18),
               transparent 65%
             ),
             radial-gradient(
               700px 420px at 50% 110%,
-              rgba(34, 211, 238, 0.14),
+              var(--ld-glow-b),
               transparent 60%
             ),
-            rgba(4, 7, 14, 0.9);
+            var(--ld-veil);
         }
         .ld-route-veil.is-cover {
           animation: ld-veil-in 0.2s ease-out both;
@@ -477,7 +638,13 @@ export default function App({ Component, pageProps }: AppProps) {
           height: 2px;
           z-index: 200;
           pointer-events: none;
-          background: linear-gradient(90deg, transparent, #2f6bff, #22d3ee, transparent);
+          background: linear-gradient(
+            90deg,
+            transparent,
+            var(--ld-primary),
+            var(--ld-focus-ring),
+            transparent
+          );
           background-size: 50% 100%;
           background-repeat: no-repeat;
           animation: ld-route-progress 0.9s ease-in-out infinite;

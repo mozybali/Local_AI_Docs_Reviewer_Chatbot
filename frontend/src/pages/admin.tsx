@@ -1,6 +1,6 @@
 import { Shield } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { glass as g, ui } from "../lib/ui";
+import { glass as g, tokens as t, ui } from "../lib/ui";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Header from "../components/Header";
 import AdminPanel from "../components/AdminPanel";
@@ -23,9 +23,9 @@ function AdminContent() {
                   ...g.iconWrap,
                   width: 34,
                   height: 34,
-                  background: "rgba(251, 191, 36, 0.12)",
-                  border: "1px solid rgba(251, 191, 36, 0.25)",
-                  color: "#fbbf24",
+                  background: "var(--ld-warning-bg)",
+                  border: "1px solid var(--ld-warning-border)",
+                  color: t.color.amber,
                 }}
               >
                 <Shield size={16} />

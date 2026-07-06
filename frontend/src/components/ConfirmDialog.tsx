@@ -97,7 +97,7 @@ export default function ConfirmDialog({
         alignItems: "center",
         justifyContent: "center",
         padding: "1.25rem",
-        background: "rgba(2, 6, 16, 0.62)",
+        background: "var(--ld-backdrop)",
         backdropFilter: "blur(6px)",
         WebkitBackdropFilter: "blur(6px)",
         animation: "ld-fade-in 0.18s ease both",
@@ -122,8 +122,8 @@ export default function ConfirmDialog({
           <span
             style={{
               ...g.iconWrap,
-              background: danger ? "rgba(248, 113, 113, 0.1)" : "rgba(37, 99, 235, 0.12)",
-              border: `1px solid ${danger ? "rgba(248, 113, 113, 0.3)" : "rgba(96, 165, 250, 0.22)"}`,
+              background: danger ? "var(--ld-danger-bg)" : "var(--ld-primary-tint)",
+              border: `1px solid ${danger ? "var(--ld-danger-border)" : "var(--ld-primary-border)"}`,
               color: accent,
             }}
           >
@@ -181,13 +181,11 @@ export default function ConfirmDialog({
               ...g.buttonBase,
               padding: "0.55rem 1rem",
               fontSize: "0.85rem",
-              color: "#ffffff",
-              background: danger
-                ? "linear-gradient(180deg, #ef4444 0%, #dc2626 100%)"
-                : "linear-gradient(180deg, #2f6bff 0%, #2356e6 100%)",
-              border: `1px solid ${danger ? "rgba(252, 165, 165, 0.5)" : "rgba(96, 165, 250, 0.6)"}`,
+              color: danger ? "var(--ld-on-danger)" : t.color.onPrimary,
+              background: danger ? "var(--ld-danger-solid)" : t.color.primary,
+              border: "1px solid transparent",
               boxShadow: danger
-                ? "0 10px 26px rgba(220, 38, 38, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.18)"
+                ? "0 6px 16px rgba(220, 38, 38, 0.25)"
                 : t.shadow.glowPrimary,
             }}
           >

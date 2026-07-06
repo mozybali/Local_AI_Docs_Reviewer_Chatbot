@@ -9,7 +9,7 @@ izolasyon PostgreSQL tarafında foreign key ile garanti altına alınır.
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -34,6 +34,13 @@ class Document(Base):
         String, default="uploaded", server_default="uploaded"
     )
     error_msg: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # Kısmi başarı uyarısı: doküman `ready` olsa bile bazı sayfalardan metin
+    # çıkarılamadıysa kullanıcıya gösterilecek açıklama burada tutulur.
+    warning_msg: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # Sayfa bazlı işleme istatistikleri (gözlemlenebilirlik + kullanıcı raporu).
+    page_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    pages_ocr: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    pages_failed: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     upload_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

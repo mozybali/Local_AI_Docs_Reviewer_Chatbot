@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
-import { ui } from "../lib/ui";
+import { tokens as t, ui } from "../lib/ui";
 import Spinner from "./Spinner";
 
 interface ProtectedRouteProps {
@@ -43,7 +43,7 @@ export default function ProtectedRoute({
       <div style={ui.page} className="ld-page">
         <p
           style={{
-            color: "#94a3b8",
+            color: t.color.muted,
             display: "flex",
             alignItems: "center",
             gap: "0.5rem",

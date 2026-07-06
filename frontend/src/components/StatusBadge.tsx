@@ -12,44 +12,44 @@ interface StatusMeta {
   dot: string;
 }
 
-// Doküman yaşam döngüsü durumlarının görsel karşılıkları (glass tinted).
+// Doküman yaşam döngüsü durumlarının görsel karşılıkları (tema değişkenleri).
 const STATUS_META: Record<DocumentStatus, StatusMeta> = {
   uploaded: {
     label: "Yüklendi",
-    bg: "rgba(148, 163, 184, 0.08)",
-    border: "rgba(148, 163, 184, 0.28)",
-    color: "#cbd5e1",
-    dot: "#94a3b8",
+    bg: "var(--ld-surface-2)",
+    border: "var(--ld-border-strong)",
+    color: t.color.muted,
+    dot: t.color.muted,
   },
   processing: {
     label: "İşleniyor",
-    bg: "rgba(251, 191, 36, 0.08)",
-    border: "rgba(251, 191, 36, 0.3)",
-    color: "#fde68a",
+    bg: "var(--ld-warning-bg)",
+    border: "var(--ld-warning-border)",
+    color: t.color.amber,
     dot: t.color.amber,
   },
   ready: {
     label: "Hazır",
-    bg: "rgba(52, 211, 153, 0.08)",
-    border: "rgba(52, 211, 153, 0.3)",
-    color: "#bbf7d0",
+    bg: "var(--ld-success-bg)",
+    border: "var(--ld-success-border)",
+    color: t.color.emerald,
     dot: t.color.emerald,
   },
   error: {
     label: "Hata",
-    bg: "rgba(248, 113, 113, 0.08)",
-    border: "rgba(248, 113, 113, 0.32)",
-    color: "#fecaca",
+    bg: "var(--ld-danger-bg)",
+    border: "var(--ld-danger-border)",
+    color: t.color.danger,
     dot: t.color.danger,
   },
 };
 
 const FALLBACK: StatusMeta = {
   label: "Bilinmiyor",
-  bg: "rgba(148, 163, 184, 0.08)",
-  border: "rgba(148, 163, 184, 0.28)",
-  color: "#e2e8f0",
-  dot: "#94a3b8",
+  bg: "var(--ld-surface-2)",
+  border: "var(--ld-border-strong)",
+  color: t.color.muted,
+  dot: t.color.muted,
 };
 
 // Devam eden (animasyonla vurgulanan) durumlar.

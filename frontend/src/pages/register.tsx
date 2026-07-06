@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import {
   AlertCircle,
+  CheckCircle2,
+  Circle,
   Eye,
   EyeOff,
   Lock,
@@ -38,6 +40,18 @@ const eyeButton: CSSProperties = {
   color: t.color.subtle,
   cursor: "pointer",
 };
+const requirementRow: CSSProperties = {
+  margin: 0,
+  display: "flex",
+  alignItems: "center",
+  gap: "0.35rem",
+  fontSize: "0.75rem",
+};
+
+// Backend'deki kurallarla senkron (bkz. backend/app/routers/auth.py UserCreate):
+// şifre en az 8 karakter, bcrypt nedeniyle en fazla 72 byte.
+const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MAX_BYTES = 72;
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -48,12 +62,23 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const passwordLongEnough = password.length >= PASSWORD_MIN_LENGTH;
+  const passwordTooManyBytes =
+    new TextEncoder().encode(password).length > PASSWORD_MAX_BYTES;
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
 
-    if (password.length < 6) {
-      setError("Şifre en az 6 karakter olmalıdır.");
+    if (!passwordLongEnough) {
+      setError(`Şifre en az ${PASSWORD_MIN_LENGTH} karakter olmalıdır.`);
+      return;
+    }
+    if (passwordTooManyBytes) {
+      setError(
+        `Şifre en fazla ${PASSWORD_MAX_BYTES} byte olabilir ` +
+          "(Türkçe karakterler birden fazla byte sayılır).",
+      );
       return;
     }
 
@@ -127,9 +152,10 @@ export default function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={PASSWORD_MIN_LENGTH}
             autoComplete="new-password"
-            placeholder="En az 6 karakter"
+            placeholder={`En az ${PASSWORD_MIN_LENGTH} karakter`}
+            aria-describedby="password-requirements"
           />
           <button
             type="button"
@@ -140,15 +166,39 @@ export default function RegisterPage() {
             {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
         </div>
-        <p
+        <div
+          id="password-requirements"
           style={{
             margin: "0 0 1rem",
-            fontSize: "0.75rem",
-            color: t.color.subtle,
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.3rem",
           }}
         >
-          Şifreniz en az 6 karakter olmalıdır.
-        </p>
+          <p
+            style={{
+              ...requirementRow,
+              color: passwordLongEnough ? t.color.emerald : t.color.subtle,
+            }}
+          >
+            {passwordLongEnough ? (
+              <CheckCircle2 size={13} style={{ flexShrink: 0 }} />
+            ) : (
+              <Circle size={13} style={{ flexShrink: 0 }} />
+            )}
+            En az {PASSWORD_MIN_LENGTH} karakter
+          </p>
+          {passwordTooManyBytes && (
+            <p
+              className="ld-fade-in"
+              style={{ ...requirementRow, color: t.color.danger }}
+            >
+              <AlertCircle size={13} style={{ flexShrink: 0 }} />
+              En fazla {PASSWORD_MAX_BYTES} byte (Türkçe karakterler birden
+              fazla byte sayılır)
+            </p>
+          )}
+        </div>
 
         <button
           type="submit"
@@ -159,7 +209,7 @@ export default function RegisterPage() {
           }}
           disabled={submitting}
         >
-          {submitting ? <Spinner size={16} color="#fff" /> : <UserPlus size={16} />}
+          {submitting ? <Spinner size={16} color={t.color.onPrimary} /> : <UserPlus size={16} />}
           {submitting ? "Hesap oluşturuluyor..." : "Hesap Oluştur"}
         </button>
 

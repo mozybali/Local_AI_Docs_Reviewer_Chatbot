@@ -35,6 +35,7 @@ import { glass as g, tokens as t } from "../lib/ui";
 import { useReducedMotion } from "../lib/useReducedMotion";
 import Spinner from "../components/Spinner";
 import Reveal from "../components/Reveal";
+import ThemeToggle from "../components/ThemeToggle";
 
 type Icon = ComponentType<{ size?: number; strokeWidth?: number; color?: string }>;
 
@@ -286,9 +287,9 @@ function PromoStage() {
         }}
       >
         <span style={{ display: "flex", gap: "0.35rem" }}>
-          <StageDot color="#f87171" />
-          <StageDot color="#fbbf24" />
-          <StageDot color="#34d399" />
+          <StageDot color={t.color.danger} />
+          <StageDot color={t.color.amber} />
+          <StageDot color={t.color.emerald} />
         </span>
         <span style={{ fontSize: "0.72rem", color: t.color.subtle, marginLeft: "0.3rem" }}>
           LocalDoc AI — kurumsal çalışma alanı
@@ -367,7 +368,7 @@ function PromoStage() {
                 style={{
                   border: `1.5px dashed ${t.color.borderGlow}`,
                   borderRadius: t.radius.md,
-                  background: "rgba(37, 99, 235, 0.06)",
+                  background: "var(--ld-primary-tint)",
                   padding: "1.1rem 0.9rem",
                   textAlign: "center",
                 }}
@@ -403,11 +404,8 @@ function PromoStage() {
                       style={{
                         height: 14,
                         borderRadius: t.radius.xs,
-                        border: `1px solid ${i < litChunks ? "rgba(96,165,250,0.5)" : t.color.border}`,
-                        background:
-                          i < litChunks
-                            ? "linear-gradient(180deg, rgba(37,99,235,0.55), rgba(34,211,238,0.3))"
-                            : "rgba(15, 23, 42, 0.5)",
+                        border: `1px solid ${i < litChunks ? "var(--ld-primary-border)" : t.color.border}`,
+                        background: i < litChunks ? t.color.primary : t.color.glassSoft,
                         transition: "background 0.25s ease, border-color 0.25s ease",
                       }}
                     />
@@ -419,7 +417,7 @@ function PromoStage() {
                     height: 5,
                     borderRadius: 999,
                     background:
-                      "linear-gradient(90deg, rgba(37,99,235,0.1), rgba(34,211,238,0.45), rgba(37,99,235,0.1))",
+                      "linear-gradient(90deg, var(--ld-primary-tint), var(--ld-primary), var(--ld-primary-tint))",
                     backgroundSize: "200% 100%",
                     animation: "ld-shimmer 1.4s linear infinite",
                   }}
@@ -441,9 +439,9 @@ function PromoStage() {
                         borderRadius: t.radius.md,
                         fontSize: "0.74rem",
                         lineHeight: 1.5,
-                        background: "linear-gradient(180deg, #2f6bff, #2356e6)",
-                        color: "#eff6ff",
-                        border: "1px solid rgba(96, 165, 250, 0.5)",
+                        background: t.color.userBubble,
+                        color: t.color.userBubbleText,
+                        border: `1px solid ${t.color.userBubbleBorder}`,
                       }}
                     >
                       {DEMO_QUESTION}
@@ -478,7 +476,7 @@ function PromoStage() {
                         borderRadius: t.radius.md,
                         fontSize: "0.74rem",
                         lineHeight: 1.55,
-                        background: "rgba(30, 41, 59, 0.7)",
+                        background: t.color.glassSoft,
                         color: t.color.text,
                         border: `1px solid ${t.color.border}`,
                       }}
@@ -507,8 +505,8 @@ function PromoStage() {
                     style={{
                       padding: "0.55rem 0.6rem",
                       borderRadius: t.radius.sm,
-                      background: "rgba(34, 211, 238, 0.05)",
-                      border: "1px solid rgba(34, 211, 238, 0.28)",
+                      background: "var(--ld-info-bg)",
+                      border: "1px solid var(--ld-info-border)",
                     }}
                   >
                     <div style={{ ...chip, color: t.color.cyan, marginBottom: "0.4rem" }}>
@@ -530,7 +528,7 @@ function PromoStage() {
               gap: "0.45rem",
               padding: "0.5rem 0.6rem",
               borderRadius: t.radius.md,
-              background: "rgba(5, 10, 22, 0.6)",
+              background: t.color.glassSoft,
               border: `1px solid ${scene === 2 ? t.color.borderGlow : t.color.borderStrong}`,
               transition: "border-color 0.3s ease",
             }}
@@ -568,14 +566,11 @@ function PromoStage() {
                 width: 24,
                 height: 24,
                 borderRadius: t.radius.sm,
-                background:
-                  scene === 2
-                    ? "linear-gradient(180deg, #2f6bff, #2356e6)"
-                    : "rgba(37, 99, 235, 0.25)",
+                background: scene === 2 ? t.color.primary : "var(--ld-primary-tint-strong)",
                 transition: "background 0.3s ease",
               }}
             >
-              <SendHorizontal size={12} color="#eff6ff" />
+              <SendHorizontal size={12} color={scene === 2 ? t.color.onPrimary : t.color.primary} />
             </span>
           </div>
         </div>
@@ -591,7 +586,7 @@ function PromoStage() {
                 flex: 1,
                 height: 3,
                 borderRadius: 999,
-                background: "rgba(148, 163, 184, 0.18)",
+                background: "var(--ld-border-strong)",
                 overflow: "hidden",
               }}
             >
@@ -600,7 +595,7 @@ function PromoStage() {
                   display: "block",
                   height: "100%",
                   borderRadius: 999,
-                  background: "linear-gradient(90deg, #2f6bff, #22d3ee)",
+                  background: "linear-gradient(90deg, var(--ld-primary), var(--ld-info))",
                   transformOrigin: "left",
                   transform: `scaleX(${i < scene ? 1 : i === scene ? local / FRAMES_PER_SCENE : 0})`,
                   transition: "transform 0.1s linear",
@@ -625,10 +620,10 @@ function PromoStage() {
             zIndex: 3,
             pointerEvents: "none",
             transition: "top 1s cubic-bezier(0.22, 0.61, 0.36, 1), left 1s cubic-bezier(0.22, 0.61, 0.36, 1)",
-            filter: "drop-shadow(0 2px 6px rgba(2, 6, 16, 0.7))",
+            filter: "drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35))",
           }}
         >
-          <MousePointer2 size={15} color="#e2e8f0" />
+          <MousePointer2 size={15} color={t.color.text} />
         </span>
       )}
     </div>
@@ -656,7 +651,7 @@ function StageProgress({ value }: { value: number }) {
         display: "block",
         height: 4,
         borderRadius: 999,
-        background: "rgba(148, 163, 184, 0.18)",
+        background: "var(--ld-border-strong)",
         overflow: "hidden",
       }}
     >
@@ -666,7 +661,7 @@ function StageProgress({ value }: { value: number }) {
           height: "100%",
           width: `${Math.round(value * 100)}%`,
           borderRadius: 999,
-          background: "linear-gradient(90deg, #2f6bff, #22d3ee)",
+          background: "linear-gradient(90deg, var(--ld-primary), var(--ld-info))",
           transition: "width 0.15s linear",
         }}
       />
@@ -702,8 +697,8 @@ function StageDoc({
         gap: "0.3rem",
         padding: "0.45rem 0.5rem",
         borderRadius: t.radius.sm,
-        background: "rgba(15, 23, 42, 0.45)",
-        border: `1px solid ${highlighted ? "rgba(34, 211, 238, 0.45)" : t.color.border}`,
+        background: t.color.glassSoft,
+        border: `1px solid ${highlighted ? "var(--ld-info-border)" : t.color.border}`,
         opacity: state === "uploading" ? 0.55 + progress * 0.45 : 1,
         transition: "border-color 0.3s ease, opacity 0.2s linear",
       }}
@@ -716,7 +711,7 @@ function StageDoc({
             inset: "0 0 auto 0",
             height: "38%",
             background:
-              "linear-gradient(180deg, transparent, rgba(34, 211, 238, 0.14), transparent)",
+              "linear-gradient(180deg, transparent, var(--ld-info-bg), transparent)",
             animation: "ld-scanline 1.6s linear infinite",
             pointerEvents: "none",
           }}
@@ -887,6 +882,7 @@ export default function HomePage() {
             <Spinner size={18} />
           ) : isAuthenticated ? (
             <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <ThemeToggle />
               <span
                 className="ld-nav-email"
                 style={{
@@ -913,6 +909,7 @@ export default function HomePage() {
             </div>
           ) : (
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <ThemeToggle />
               <Link
                 href="/login"
                 className="ld-btn"
@@ -1002,13 +999,13 @@ export default function HomePage() {
                 <Link
                   href="/admin"
                   className="ld-hover-card"
-                  style={{ ...g.actionCard, border: "1px solid rgba(251, 191, 36, 0.3)" }}
+                  style={{ ...g.actionCard, border: "1px solid var(--ld-warning-border)" }}
                 >
                   <span
                     style={{
                       ...g.iconWrap,
-                      background: "rgba(251, 191, 36, 0.12)",
-                      border: "1px solid rgba(251, 191, 36, 0.25)",
+                      background: "var(--ld-warning-bg)",
+                      border: "1px solid var(--ld-warning-border)",
                       color: t.color.amber,
                     }}
                   >
@@ -1060,7 +1057,7 @@ export default function HomePage() {
                   Şirket dokümanlarınızı{" "}
                   <span
                     style={{
-                      background: "linear-gradient(90deg, #60a5fa, #22d3ee)",
+                      background: "linear-gradient(90deg, var(--ld-primary), var(--ld-info))",
                       WebkitBackgroundClip: "text",
                       backgroundClip: "text",
                       color: "transparent",
@@ -1193,13 +1190,13 @@ export default function HomePage() {
                             height: 18,
                             borderRadius: t.radius.sm,
                             background: t.color.primary,
-                            color: "#fff",
+                            color: t.color.onPrimary,
                             fontSize: "0.62rem",
                             fontWeight: 700,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            border: "1px solid rgba(96, 165, 250, 0.6)",
+                            border: "1px solid var(--ld-primary-border)",
                           }}
                         >
                           {i + 1}
@@ -1258,7 +1255,7 @@ export default function HomePage() {
                     className="ld-glass ld-hover-card"
                     style={{ ...g.glassPanel, padding: "1.4rem", height: "100%" }}
                   >
-                    <span style={{ ...g.iconWrap, color: t.color.cyan, background: "rgba(34, 211, 238, 0.1)", border: "1px solid rgba(34, 211, 238, 0.22)" }}>
+                    <span style={{ ...g.iconWrap, color: t.color.cyan, background: "var(--ld-info-bg)", border: "1px solid var(--ld-info-border)" }}>
                       <CaseIcon size={19} />
                     </span>
                     <h3 style={{ margin: "0.9rem 0 0.4rem", fontSize: "1.02rem", color: t.color.heading }}>
@@ -1283,8 +1280,8 @@ export default function HomePage() {
                   padding: "2.75rem 1.75rem",
                   textAlign: "center",
                   background:
-                    "radial-gradient(620px 240px at 50% 0%, rgba(37, 99, 235, 0.2), transparent 70%)," +
-                    t.color.surfaceStrong,
+                    "radial-gradient(620px 240px at 50% 0%, var(--ld-primary-tint-strong), transparent 70%)," +
+                    t.color.surface,
                 }}
               >
                 <h2 style={{ ...g.sectionTitle, margin: "0 auto 0.7rem", maxWidth: 560 }}>
@@ -1345,12 +1342,12 @@ export default function HomePage() {
           background:
             radial-gradient(
               560px circle at var(--ld-mx, 50%) var(--ld-my, 26%),
-              rgba(37, 99, 235, 0.2),
+              var(--ld-glow-b),
               transparent 60%
             ),
             radial-gradient(
               900px circle at var(--ld-mx, 50%) var(--ld-my, 26%),
-              rgba(34, 211, 238, 0.09),
+              var(--ld-glow-a),
               transparent 55%
             );
           transition: background 0.12s ease-out;
@@ -1381,19 +1378,19 @@ export default function HomePage() {
           gap: 0.28rem;
         }
         .ld-outcome-strip strong {
-          color: #f1f5f9;
+          color: var(--ld-text);
           font-size: 0.95rem;
           line-height: 1.2;
         }
         .ld-outcome-strip span {
-          color: #bfdbfe;
+          color: var(--ld-primary);
           font-size: 0.76rem;
           font-weight: 700;
           line-height: 1.35;
         }
         .ld-outcome-strip p {
           margin: 0;
-          color: #94a3b8;
+          color: var(--ld-text-muted);
           font-size: 0.74rem;
           line-height: 1.5;
         }

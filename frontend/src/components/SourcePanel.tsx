@@ -79,7 +79,7 @@ function SourceItem({ source }: { source: Source }) {
   return (
     <div
       style={{
-        background: "rgba(5, 10, 22, 0.55)",
+        background: t.color.codeBg,
         border: `1px solid ${t.color.border}`,
         borderRadius: t.radius.md,
         padding: "0.5rem 0.6rem",
@@ -133,8 +133,8 @@ function SourceItem({ source }: { source: Source }) {
               fontSize: "0.68rem",
               fontWeight: 700,
               color: t.color.cyan,
-              background: "rgba(34, 211, 238, 0.1)",
-              border: "1px solid rgba(34, 211, 238, 0.28)",
+              background: "var(--ld-info-bg)",
+              border: "1px solid var(--ld-info-border)",
               borderRadius: t.radius.xs,
               padding: "0.08rem 0.4rem",
             }}
@@ -155,7 +155,7 @@ function SourceItem({ source }: { source: Source }) {
             margin: "0.5rem 0 0",
             paddingTop: "0.5rem",
             borderTop: `1px solid ${t.color.border}`,
-            color: "#cbd5e1",
+            color: t.color.text,
             lineHeight: 1.55,
             whiteSpace: "pre-wrap",
           }}

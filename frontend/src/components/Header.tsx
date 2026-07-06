@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { glass as g, tokens as t } from "../lib/ui";
+import ThemeToggle from "./ThemeToggle";
 
 type Icon = ComponentType<{ size?: number; strokeWidth?: number }>;
 
@@ -71,7 +72,7 @@ export default function Header() {
             gap: "0.2rem",
             padding: "0.22rem",
             borderRadius: t.radius.md,
-            background: "rgba(15, 23, 42, 0.5)",
+            background: t.color.glassSoft,
             border: `1px solid ${t.color.border}`,
             boxShadow: t.shadow.insetHi,
             overflowX: "auto",
@@ -97,11 +98,9 @@ export default function Header() {
                   fontSize: "0.83rem",
                   fontWeight: 600,
                   whiteSpace: "nowrap",
-                  color: active ? "#ffffff" : t.color.muted,
-                  background: active
-                    ? "linear-gradient(180deg, #2f6bff, #2356e6)"
-                    : "transparent",
-                  border: `1px solid ${active ? "rgba(96, 165, 250, 0.55)" : "transparent"}`,
+                  color: active ? t.color.onPrimary : t.color.muted,
+                  background: active ? t.color.primary : "transparent",
+                  border: `1px solid ${active ? "var(--ld-primary-border)" : "transparent"}`,
                   boxShadow: active ? t.shadow.insetHi : undefined,
                   transition:
                     "background 0.15s ease, color 0.15s ease, border-color 0.15s ease",
@@ -138,6 +137,7 @@ export default function Header() {
             {user?.email}
             {isAdmin ? " (admin)" : ""}
           </span>
+          <ThemeToggle />
           <button
             type="button"
             onClick={logout}

@@ -1,39 +1,47 @@
-// Tasarım sistemi — tüm ekranların paylaştığı "liquid glass" token ve stilleri.
-// Blur, .ld-glass / .ld-glass-strong global sınıflarından gelir (bkz. _app.tsx);
-// böylece mobilde tek noktadan azaltılabilir.
+// Tasarım sistemi — tüm ekranların paylaştığı token ve stiller.
+// Renk değerleri _app.tsx'te tanımlanan CSS değişkenlerinden (--ld-*) gelir;
+// aydınlık/karanlık tema :root[data-theme] üzerinden tek noktadan değişir.
+// Blur, .ld-glass / .ld-glass-strong global sınıflarından gelir (bkz. _app.tsx).
 import type { CSSProperties } from "react";
 
 /** Tek kaynaktan yönetilen tasarım token'ları. */
 export const tokens = {
   color: {
-    bg: "#05070d", // ana zemin — çok koyu lacivert/siyah
-    surface: "rgba(15, 23, 42, 0.6)",
-    surfaceStrong: "rgba(9, 14, 26, 0.82)",
-    glass: "rgba(17, 25, 44, 0.52)", // yarı saydam cam panel
-    glassSoft: "rgba(30, 41, 59, 0.32)",
-    glassHover: "rgba(37, 51, 75, 0.55)",
-    border: "rgba(148, 163, 184, 0.14)", // ince cam border
-    borderStrong: "rgba(148, 163, 184, 0.26)",
-    borderGlow: "rgba(96, 165, 250, 0.45)", // ışıklı border vurgusu
-    heading: "#f1f5f9",
-    text: "#e2e8f0",
-    muted: "#94a3b8",
-    subtle: "#64748b",
-    primary: "#2563eb", // birincil mavi
-    primarySoft: "#60a5fa",
-    cyan: "#22d3ee", // yardımcı vurgu
-    emerald: "#34d399", // başarı
-    amber: "#fbbf24", // uyarı
-    danger: "#f87171", // hata
+    bg: "var(--ld-bg)",
+    surface: "var(--ld-surface)",
+    surfaceStrong: "var(--ld-surface)",
+    glass: "var(--ld-surface)", // ana yüzey / kart
+    glassSoft: "var(--ld-surface-2)", // ikincil yüzey
+    glassHover: "var(--ld-surface-2)",
+    border: "var(--ld-border)", // ince border
+    borderStrong: "var(--ld-border-strong)",
+    borderGlow: "var(--ld-primary-border)", // vurgulu border
+    heading: "var(--ld-text)",
+    text: "var(--ld-text)",
+    muted: "var(--ld-text-muted)",
+    subtle: "var(--ld-text-muted)",
+    primary: "var(--ld-primary)", // primary / CTA
+    primaryHover: "var(--ld-primary-hover)",
+    primarySoft: "var(--ld-primary)",
+    onPrimary: "var(--ld-on-primary)", // primary zemin üzerindeki metin
+    // Sohbet yüzeyleri
+    userBubble: "var(--ld-user-bubble)",
+    userBubbleText: "var(--ld-user-bubble-text)",
+    userBubbleBorder: "var(--ld-user-bubble-border)",
+    assistantBubble: "var(--ld-assistant-bubble)",
+    codeBg: "var(--ld-code-bg)",
+    // Durum renkleri (palet dışı; her temada okunur tonlar _app.tsx'te)
+    cyan: "var(--ld-info)", // yardımcı vurgu / bilgi
+    emerald: "var(--ld-success)", // başarı
+    amber: "var(--ld-warning)", // uyarı
+    danger: "var(--ld-danger)", // hata
   },
   radius: { xs: 4, sm: 6, md: 8, lg: 10 },
   shadow: {
-    panel:
-      "0 24px 60px rgba(2, 6, 16, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
-    soft: "0 12px 32px rgba(2, 6, 16, 0.45)",
-    insetHi: "inset 0 1px 0 rgba(255, 255, 255, 0.06)", // üstte cam ışık yansıması
-    glowPrimary:
-      "0 10px 26px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18)",
+    panel: "var(--ld-shadow-panel)",
+    soft: "var(--ld-shadow-soft)",
+    insetHi: "var(--ld-shadow-inset)", // üstte ince ışık yansıması
+    glowPrimary: "var(--ld-shadow-primary)",
   },
   blur: { panel: 18, nav: 16, soft: 10 }, // px — .ld-glass sınıflarıyla senkron
   transition: {
@@ -41,7 +49,7 @@ export const tokens = {
     base: "0.22s cubic-bezier(0.22, 0.61, 0.36, 1)",
     slow: "0.5s cubic-bezier(0.22, 0.61, 0.36, 1)",
   },
-  focusRing: "0 0 0 3px rgba(59, 130, 246, 0.32)",
+  focusRing: "var(--ld-focus-shadow)",
   space: {
     xs: "0.35rem",
     sm: "0.6rem",
@@ -72,7 +80,7 @@ const buttonBase: CSSProperties = {
   transition: `background ${tokens.transition.fast}, border-color ${tokens.transition.fast}, box-shadow ${tokens.transition.fast}, transform 0.1s ease, filter ${tokens.transition.fast}, opacity ${tokens.transition.fast}`,
 };
 
-/** Reusable liquid glass stil objeleri. */
+/** Reusable stil objeleri. */
 export const glass: Record<string, CSSProperties> = {
   // --- Kabuk / yerleşim ---
   pageShell: {
@@ -91,13 +99,13 @@ export const glass: Record<string, CSSProperties> = {
 
   // --- Paneller ---
   glassPanel: {
-    background: c.glass,
+    background: c.surface,
     border: `1px solid ${c.border}`,
     borderRadius: r.md,
     boxShadow: sh.panel,
   },
   glassPanelStrong: {
-    background: c.surfaceStrong,
+    background: c.surface,
     border: `1px solid ${c.border}`,
     borderRadius: r.md,
     boxShadow: sh.panel,
@@ -113,39 +121,39 @@ export const glass: Record<string, CSSProperties> = {
   buttonBase,
   glassButton: {
     ...buttonBase,
-    background: "linear-gradient(180deg, #2f6bff 0%, #2356e6 100%)",
-    color: "#ffffff",
-    border: "1px solid rgba(96, 165, 250, 0.6)",
+    background: c.primary,
+    color: c.onPrimary,
+    border: "1px solid transparent",
     boxShadow: sh.glowPrimary,
   },
   ghostButton: {
     ...buttonBase,
-    background: "rgba(148, 163, 184, 0.06)",
-    color: "#dbeafe",
+    background: c.surface,
+    color: c.text,
     border: `1px solid ${c.borderStrong}`,
     boxShadow: sh.insetHi,
   },
   dangerButton: {
     ...buttonBase,
-    background: "rgba(248, 113, 113, 0.06)",
+    background: "var(--ld-danger-bg)",
     color: c.danger,
-    border: "1px solid rgba(248, 113, 113, 0.32)",
+    border: "1px solid var(--ld-danger-border)",
   },
   smallButton: {
     ...buttonBase,
     padding: "0.38rem 0.75rem",
     fontSize: "0.8rem",
-    background: "rgba(148, 163, 184, 0.06)",
-    color: "#cbd5e1",
+    background: c.surface,
+    color: c.text,
     border: `1px solid ${c.borderStrong}`,
   },
   smallDangerButton: {
     ...buttonBase,
     padding: "0.38rem 0.75rem",
     fontSize: "0.8rem",
-    background: "rgba(248, 113, 113, 0.05)",
+    background: "var(--ld-danger-bg)",
     color: c.danger,
-    border: "1px solid rgba(248, 113, 113, 0.3)",
+    border: "1px solid var(--ld-danger-border)",
   },
 
   // --- Form ---
@@ -155,12 +163,12 @@ export const glass: Record<string, CSSProperties> = {
     fontSize: "0.8rem",
     fontWeight: 600,
     letterSpacing: "0.2px",
-    color: "#cbd5e1",
+    color: c.muted,
   },
   input: {
     width: "100%",
     padding: "0.68rem 0.85rem",
-    background: "rgba(5, 10, 22, 0.55)",
+    background: c.surface,
     border: `1px solid ${c.borderStrong}`,
     borderRadius: r.md,
     color: c.text,
@@ -175,9 +183,9 @@ export const glass: Record<string, CSSProperties> = {
     gap: "0.55rem",
     padding: "0.65rem 0.85rem",
     borderRadius: r.md,
-    background: "rgba(248, 113, 113, 0.09)",
-    border: "1px solid rgba(248, 113, 113, 0.32)",
-    color: "#fecaca",
+    background: "var(--ld-danger-bg)",
+    border: "1px solid var(--ld-danger-border)",
+    color: c.danger,
     fontSize: "0.85rem",
     lineHeight: 1.5,
   },
@@ -187,9 +195,9 @@ export const glass: Record<string, CSSProperties> = {
     gap: "0.55rem",
     padding: "0.65rem 0.85rem",
     borderRadius: r.md,
-    background: "rgba(52, 211, 153, 0.08)",
-    border: "1px solid rgba(52, 211, 153, 0.3)",
-    color: "#bbf7d0",
+    background: "var(--ld-success-bg)",
+    border: "1px solid var(--ld-success-border)",
+    color: c.emerald,
     fontSize: "0.85rem",
     lineHeight: 1.5,
   },
@@ -199,9 +207,9 @@ export const glass: Record<string, CSSProperties> = {
     gap: "0.55rem",
     padding: "0.65rem 0.85rem",
     borderRadius: r.md,
-    background: "rgba(251, 191, 36, 0.08)",
-    border: "1px solid rgba(251, 191, 36, 0.32)",
-    color: "#fde68a",
+    background: "var(--ld-warning-bg)",
+    border: "1px solid var(--ld-warning-border)",
+    color: c.amber,
     fontSize: "0.85rem",
     lineHeight: 1.5,
   },
@@ -213,9 +221,9 @@ export const glass: Record<string, CSSProperties> = {
     gap: "0.45rem",
     padding: "0.32rem 0.7rem",
     borderRadius: r.sm,
-    background: "rgba(37, 99, 235, 0.1)",
-    border: "1px solid rgba(96, 165, 250, 0.25)",
-    color: c.primarySoft,
+    background: "var(--ld-primary-tint)",
+    border: "1px solid var(--ld-primary-border)",
+    color: c.primary,
     fontSize: "0.72rem",
     fontWeight: 700,
     letterSpacing: "0.6px",
@@ -229,7 +237,7 @@ export const glass: Record<string, CSSProperties> = {
     borderRadius: r.sm,
     background: c.glassSoft,
     border: `1px solid ${c.border}`,
-    color: "#cbd5e1",
+    color: c.muted,
     fontSize: "0.78rem",
     fontWeight: 600,
     whiteSpace: "nowrap",
@@ -242,9 +250,9 @@ export const glass: Record<string, CSSProperties> = {
     width: 40,
     height: 40,
     borderRadius: r.md,
-    background: "rgba(37, 99, 235, 0.12)",
-    border: "1px solid rgba(96, 165, 250, 0.22)",
-    color: c.primarySoft,
+    background: "var(--ld-primary-tint)",
+    border: "1px solid var(--ld-primary-border)",
+    color: c.primary,
     boxShadow: sh.insetHi,
     flexShrink: 0,
   },
@@ -289,7 +297,7 @@ export const glass: Record<string, CSSProperties> = {
     position: "sticky",
     top: 0,
     zIndex: 20,
-    background: "rgba(5, 8, 16, 0.68)",
+    background: "var(--ld-nav-bg)",
     borderBottom: `1px solid ${c.border}`,
   },
   brand: {
@@ -310,11 +318,10 @@ export const glass: Record<string, CSSProperties> = {
     width: 30,
     height: 30,
     borderRadius: r.md,
-    background:
-      "linear-gradient(180deg, rgba(37, 99, 235, 0.38), rgba(34, 211, 238, 0.18))",
-    border: `1px solid ${c.borderGlow}`,
+    background: c.primary,
+    border: "1px solid var(--ld-primary-border)",
     boxShadow: sh.insetHi,
-    color: c.primarySoft,
+    color: c.onPrimary,
     flexShrink: 0,
   },
 
@@ -325,7 +332,7 @@ export const glass: Record<string, CSSProperties> = {
     gap: "0.85rem",
     padding: "1rem",
     borderRadius: r.md,
-    background: c.glass,
+    background: c.surface,
     border: `1px solid ${c.border}`,
     boxShadow: sh.insetHi,
     textDecoration: "none",
@@ -338,7 +345,7 @@ export const glass: Record<string, CSSProperties> = {
     gap: "0.85rem",
     padding: "1rem 1.1rem",
     borderRadius: r.md,
-    background: c.glass,
+    background: c.surface,
     border: `1px solid ${c.border}`,
     boxShadow: sh.insetHi,
   },
@@ -348,8 +355,8 @@ export const glass: Record<string, CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     gap: "0.4rem",
-    background: "rgba(148, 163, 184, 0.05)",
-    color: "#cbd5e1",
+    background: c.glassSoft,
+    color: c.muted,
     border: `1px solid ${c.borderStrong}`,
     borderRadius: r.sm,
     padding: "0.34rem 0.7rem",
@@ -360,9 +367,9 @@ export const glass: Record<string, CSSProperties> = {
     transition: `background ${tokens.transition.fast}, border-color ${tokens.transition.fast}, color ${tokens.transition.fast}`,
   },
   chipActive: {
-    background: "rgba(37, 99, 235, 0.18)",
-    color: "#dbeafe",
-    border: "1px solid rgba(96, 165, 250, 0.55)",
+    background: "var(--ld-primary-tint-strong)",
+    color: c.primary,
+    border: "1px solid var(--ld-primary-border)",
     boxShadow: sh.insetHi,
   },
 };

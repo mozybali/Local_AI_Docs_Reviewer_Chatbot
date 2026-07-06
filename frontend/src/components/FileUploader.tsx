@@ -21,7 +21,8 @@ interface FileUploaderProps {
 }
 
 // İstemci tarafı doğrulama (backend de ayrıca doğrular).
-const ALLOWED_EXTENSIONS = ["pdf", "txt", "docx"];
+// Görüntü dosyaları (png/jpg/jpeg) sunucuda lokal OCR ile metne çevrilir.
+const ALLOWED_EXTENSIONS = ["pdf", "txt", "docx", "png", "jpg", "jpeg"];
 const MAX_FILE_SIZE_MB = 50;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
@@ -30,6 +31,9 @@ const EXT_COLORS: Record<string, string> = {
   pdf: t.color.danger,
   txt: t.color.muted,
   docx: t.color.primarySoft,
+  png: t.color.emerald,
+  jpg: t.color.amber,
+  jpeg: t.color.amber,
 };
 
 function extensionOf(name: string): string {
@@ -155,10 +159,10 @@ export default function FileUploader({ token, onUploaded }: FileUploaderProps) {
         style={{
           position: "relative",
           overflow: "hidden",
-          border: `1.5px dashed ${dragOver ? "rgba(96, 165, 250, 0.75)" : t.color.borderStrong}`,
-          background: dragOver ? "rgba(37, 99, 235, 0.1)" : "rgba(5, 10, 22, 0.45)",
+          border: `1.5px dashed ${dragOver ? "var(--ld-focus-ring)" : t.color.borderStrong}`,
+          background: dragOver ? "var(--ld-primary-tint)" : t.color.glassSoft,
           boxShadow: dragOver
-            ? "inset 0 0 44px rgba(37, 99, 235, 0.22)"
+            ? "inset 0 0 44px rgba(var(--ld-primary-rgb), 0.14)"
             : t.shadow.insetHi,
           borderRadius: t.radius.md,
           padding: "1.9rem 1rem",
@@ -233,8 +237,8 @@ export default function FileUploader({ token, onUploaded }: FileUploaderProps) {
             gap: "0.65rem",
             padding: "0.65rem 0.75rem",
             borderRadius: t.radius.md,
-            background: "rgba(37, 99, 235, 0.08)",
-            border: "1px solid rgba(96, 165, 250, 0.32)",
+            background: "var(--ld-primary-tint)",
+            border: "1px solid var(--ld-primary-border)",
             marginBottom: "1rem",
           }}
         >
@@ -286,7 +290,7 @@ export default function FileUploader({ token, onUploaded }: FileUploaderProps) {
         id="file"
         ref={inputRef}
         type="file"
-        accept=".pdf,.txt,.docx"
+        accept=".pdf,.txt,.docx,.png,.jpg,.jpeg"
         style={{ display: "none" }}
         onChange={(e) => chooseFile(e.target.files?.[0] ?? null)}
       />
@@ -300,7 +304,7 @@ export default function FileUploader({ token, onUploaded }: FileUploaderProps) {
         }}
         disabled={uploading || !file}
       >
-        {uploading ? <Spinner size={16} color="#fff" /> : <FileUp size={16} />}
+        {uploading ? <Spinner size={16} color={t.color.onPrimary} /> : <FileUp size={16} />}
         {uploading ? "Yükleniyor..." : "Yükle"}
       </button>
     </form>

@@ -19,6 +19,7 @@ from app.config import settings, validate_security_settings
 from app.database import SessionLocal
 from app.routers import admin, auth, chat, documents, search
 from app.seed import seed_admin_user
+from app.services import processing_queue
 from app.services.document_service import recover_stale_documents
 
 logging.basicConfig(level=logging.INFO)
@@ -42,6 +43,8 @@ async def lifespan(app: FastAPI):
     seed_admin_user()
     with SessionLocal() as db:
         recover_stale_documents(db)
+    # Doküman işleme kuyruğunun worker'ını başlat (upload'lar seri işlenir).
+    processing_queue.start_worker()
     logger.info("Başlangıç hazır.")
     yield
 

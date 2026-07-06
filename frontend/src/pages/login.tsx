@@ -142,7 +142,7 @@ export default function LoginPage() {
           }}
           disabled={submitting}
         >
-          {submitting ? <Spinner size={16} color="#fff" /> : <LogIn size={16} />}
+          {submitting ? <Spinner size={16} color={t.color.onPrimary} /> : <LogIn size={16} />}
           {submitting ? "Giriş yapılıyor..." : "Giriş Yap"}
         </button>
 

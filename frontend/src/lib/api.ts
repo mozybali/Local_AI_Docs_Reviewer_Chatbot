@@ -1,8 +1,10 @@
 // Backend API ile iletişim için basit yardımcı katman.
 // Temel URL `.env.local` içindeki NEXT_PUBLIC_API_URL değerinden okunur.
+// Varsayılan "/backend" göreli yoldur: istekler aynı origin'e gider ve
+// next.config.js'teki rewrite kuralı onları FastAPI'ye iletir. Backend'e
+// doğrudan bağlanmak için NEXT_PUBLIC_API_URL'e mutlak bir URL verin.
 
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "/backend";
 
 export class ApiError extends Error {
   status: number;

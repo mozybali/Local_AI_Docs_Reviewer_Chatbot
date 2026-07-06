@@ -147,7 +147,7 @@ function TypingIndicator() {
         display: "flex",
         alignItems: "center",
         gap: "0.3rem",
-        background: t.color.glass,
+        background: t.color.assistantBubble,
         border: `1px solid ${t.color.border}`,
         borderRadius: t.radius.md,
         padding: "0.7rem 0.85rem",
@@ -184,19 +184,19 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         alignSelf: isUser ? "flex-end" : "flex-start",
         maxWidth: "85%",
         background: isUser
-          ? "linear-gradient(180deg, #2f6bff 0%, #2356e6 100%)"
+          ? t.color.userBubble
           : isError
-            ? "rgba(248, 113, 113, 0.08)"
-            : t.color.glass,
+            ? "var(--ld-danger-bg)"
+            : t.color.assistantBubble,
         border: isUser
-          ? "1px solid rgba(96, 165, 250, 0.55)"
+          ? `1px solid ${t.color.userBubbleBorder}`
           : isError
-            ? "1px solid rgba(248, 113, 113, 0.32)"
+            ? "1px solid var(--ld-danger-border)"
             : `1px solid ${t.color.border}`,
-        color: isUser ? "#eff6ff" : isError ? "#fecaca" : t.color.text,
+        color: isUser ? t.color.userBubbleText : isError ? t.color.danger : t.color.text,
         borderRadius: t.radius.md,
         padding: "0.65rem 0.85rem",
-        boxShadow: isUser ? t.shadow.glowPrimary : t.shadow.insetHi,
+        boxShadow: isUser ? t.shadow.soft : t.shadow.insetHi,
       }}
     >
       <p

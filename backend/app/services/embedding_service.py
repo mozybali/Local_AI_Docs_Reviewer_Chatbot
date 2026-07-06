@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 import threading
 from functools import lru_cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from app.config import settings
 
@@ -83,6 +83,56 @@ def get_model() -> "SentenceTransformer":
 def get_embedding_dimension() -> int:
     """Aktif embedding modelinin vektör boyutunu döner."""
     return _model_dimension(get_model())
+
+
+def try_get_token_counter() -> Callable[[str], int] | None:
+    """Modelin tokenizer'ına dayalı bir token sayacı döner (yüklenemezse None).
+
+    Chunker bu sayaçla chunk boyutunu GERÇEK model tokenlarıyla ölçer; böylece
+    chunk'lar modelin girdi limitini aşıp embedding sırasında sessizce
+    kırpılmaz. Model/tokenizer yüklenemiyorsa None döner ve chunker kelime
+    vekiline düşer (pipeline OCR'dan embedding'e kadar yine çalışır).
+    """
+    try:
+        model = get_model()
+    except EmbeddingError:
+        return None
+
+    tokenizer = getattr(model, "tokenizer", None)
+    if tokenizer is None:
+        return None
+
+    def count_tokens(text: str) -> int:
+        try:
+            return len(
+                tokenizer(
+                    text, add_special_tokens=True, truncation=False
+                )["input_ids"]
+            )
+        except Exception:
+            # Tokenizer arayüzü beklenmedikse kelime vekiline düş.
+            return len(text.split())
+
+    return count_tokens
+
+
+def try_get_max_seq_tokens() -> int | None:
+    """Modelin girdi limitini (max_seq_length, token) döner; bilinmiyorsa None.
+
+    Chunker efektif chunk boyutunu bu değerle sınırlar. Tokenizer'ın özel
+    token payı (CLS/SEP) sayaç tarafında zaten hesaba katılır.
+    """
+    try:
+        model = get_model()
+    except EmbeddingError:
+        return None
+
+    max_seq = getattr(model, "max_seq_length", None)
+    try:
+        max_seq = int(max_seq) if max_seq else None
+    except (TypeError, ValueError):
+        return None
+    return max_seq if max_seq and max_seq > 0 else None
 
 
 def embed_texts(texts: list[str]) -> list[list[float]]:

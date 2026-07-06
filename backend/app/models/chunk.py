@@ -13,7 +13,7 @@ silindiğinde ilişkili chunk'lar da silinir.
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -33,6 +33,10 @@ class Chunk(Base):
     page_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     vector_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # İçeriğin kaynağı: "native" (dosyanın metin katmanı) veya "ocr".
+    source_type: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # OCR ile okunduysa ortalama güven (0-1); native içerikte NULL.
+    ocr_confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

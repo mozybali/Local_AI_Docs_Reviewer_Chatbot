@@ -2,7 +2,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, UploadCloud } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { glass as g, ui } from "../lib/ui";
+import { glass as g, tokens as t, ui } from "../lib/ui";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Header from "../components/Header";
 import FileUploader, { type UploadResult } from "../components/FileUploader";
@@ -26,8 +26,9 @@ function UploadContent() {
             Doküman Yükle
           </h1>
           <p style={{ ...ui.pageSubtitle, marginBottom: "1.5rem" }}>
-            PDF, TXT veya DOCX dosyası yükleyin. Yükleme sonrası işleme arka
-            planda yapılır.
+            PDF, TXT, DOCX veya görüntü (PNG/JPG) dosyası yükleyin. Taranmış
+            belgeler ve görüntüler lokal OCR ile okunur; işleme arka planda
+            yapılır.
           </p>
 
           {result && (
@@ -39,7 +40,7 @@ function UploadContent() {
                 Doküman ID: {result.document_id} — Durum: {result.status}
                 <br />
                 İşleme arka planda sürüyor.{" "}
-                <Link href="/documents" style={{ color: "#bbf7d0", fontWeight: 600 }}>
+                <Link href="/documents" style={{ color: t.color.emerald, fontWeight: 600 }}>
                   Dokümanlarım
                 </Link>{" "}
                 sayfasından takip edebilirsiniz.

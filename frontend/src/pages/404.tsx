@@ -25,7 +25,7 @@ export default function NotFoundPage() {
             fontWeight: 800,
             lineHeight: 1.1,
             letterSpacing: "-1px",
-            background: "linear-gradient(90deg, #60a5fa, #22d3ee)",
+            background: "linear-gradient(90deg, var(--ld-primary), var(--ld-info))",
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             color: "transparent",
@@ -39,7 +39,7 @@ export default function NotFoundPage() {
           Aradığınız sayfa taşınmış veya hiç var olmamış olabilir.
         </p>
         <Link href="/" className="ld-btn" style={{ ...g.glassButton, width: "100%" }}>
-          <Home size={15} color={t.color.heading} />
+          <Home size={15} color={t.color.onPrimary} />
           Ana sayfaya dön
         </Link>
       </div>

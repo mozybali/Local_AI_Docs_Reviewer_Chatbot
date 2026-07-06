@@ -19,7 +19,8 @@ export default function Spinner({
   size = 16,
   thickness = 2,
   color = "currentColor",
-  trackColor = "rgba(148, 163, 184, 0.35)",
+  // Metin rengini takip eder; her iki temada da bağlamla uyumlu kalır.
+  trackColor = "color-mix(in srgb, currentColor 30%, transparent)",
   style,
 }: SpinnerProps) {
   return (

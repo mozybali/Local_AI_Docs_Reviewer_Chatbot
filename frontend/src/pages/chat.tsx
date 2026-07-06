@@ -221,7 +221,7 @@ function ChatContent() {
               <span>
                 Soru sorabilmek için önce en az bir doküman yükleyip işlenmesini
                 (durum: <strong>Hazır</strong>) beklemelisiniz.{" "}
-                <Link href="/upload" style={{ color: "#fde68a", fontWeight: 600 }}>
+                <Link href="/upload" style={{ color: t.color.amber, fontWeight: 600 }}>
                   Doküman yükle
                 </Link>
                 .
