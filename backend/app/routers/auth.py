@@ -6,6 +6,7 @@ JWT gerektirir. İstek/yanıt şemaları (Pydantic) bu modül içinde tanımlıd
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field, field_validator
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -99,9 +100,17 @@ def register(
             status_code=status.HTTP_409_CONFLICT,
             detail="Bu e-posta adresi zaten kayıtlı.",
         )
-    user = auth_service.create_user(
-        db, email=payload.email, password=payload.password, role="user"
-    )
+    try:
+        user = auth_service.create_user(
+            db, email=payload.email, password=payload.password, role="user"
+        )
+    except IntegrityError:
+        # Yarış durumu: yukarıdaki kontrol ile INSERT arasında aynı e-posta
+        # başka bir istekle kaydedildi. Kontrolsüz 500 yerine 409 dönülür.
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Bu e-posta adresi zaten kayıtlı.",
+        )
     return user
 
 

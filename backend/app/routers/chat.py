@@ -93,7 +93,9 @@ class ChatRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", protected_namespaces=())
 
     question: str = Field(min_length=1, max_length=2000)
-    document_ids: list[int] | None = None
+    # Üst sınır: sınırsız liste, dev SQL IN sorgusu / bellek tüketimi (DoS)
+    # üretebilir. Tüm dokümanlarda aramak için liste yerine null gönderilir.
+    document_ids: list[int] | None = Field(default=None, max_length=200)
     top_k: int = Field(default=8, ge=1, le=20)
     # Opsiyonel model seçimi; boşsa RAG modunun varsayılan modeli kullanılır.
     model_id: str | None = Field(default=None, max_length=200)

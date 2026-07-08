@@ -117,6 +117,49 @@ def test_register_over_72_byte_password_rejected_not_truncated(client):
     assert "72" in res.text
 
 
+def test_register_race_duplicate_insert_returns_409(client, monkeypatch):
+    """Varlık kontrolü ile INSERT arasındaki yarışta 500 değil 409 dönmeli.
+
+    İki eş zamanlı istek aynı e-postayla kayıt olmaya çalışırsa ikisi de
+    "e-posta yok" kontrolünü geçebilir; ikinci INSERT unique ihlaline düşer.
+    Bu durum kontrolsüz IntegrityError (500) yerine 409 üretmelidir.
+    """
+    from app.services import auth_service
+
+    payload = {"email": "yaris@x.com", "password": _PASSWORD}
+    assert client.post("/auth/register", json=payload).status_code == 201
+
+    # Yarışı simüle et: varlık kontrolü "kayıt yok" desin; INSERT unique
+    # e-posta kısıtına takılsın.
+    monkeypatch.setattr(auth_service, "get_user_by_email", lambda db, email: None)
+    res = client.post("/auth/register", json=payload)
+    assert res.status_code == 409
+
+
+def test_authenticate_unknown_user_still_runs_password_verify(monkeypatch):
+    """Kullanıcı yokken de bcrypt doğrulaması koşulmalı (timing eşitleme).
+
+    Aksi halde "e-posta kayıtlı değil" yanıtı, "şifre yanlış" yanıtından
+    belirgin şekilde hızlı döner ve yanıt süresi üzerinden e-posta varlığı
+    sızdırılabilir (user enumeration).
+    """
+    from app.services import auth_service
+
+    verified_hashes: list[str] = []
+
+    def fake_verify(password: str, hashed: str) -> bool:
+        verified_hashes.append(hashed)
+        return False
+
+    monkeypatch.setattr(auth_service, "get_user_by_email", lambda db, email: None)
+    monkeypatch.setattr(auth_service, "verify_password", fake_verify)
+
+    assert auth_service.authenticate_user(None, "yok@x.com", "sifre") is None
+    # Kullanıcı yokken de tam olarak bir kez (dummy hash ile) doğrulama yapılır.
+    assert len(verified_hashes) == 1
+    assert verified_hashes[0].startswith("$2b$")
+
+
 def test_register_password_at_72_byte_boundary_is_accepted(client):
     res = client.post(
         "/auth/register", json={"email": "sinir@x.com", "password": "a" * 72}

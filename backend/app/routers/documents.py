@@ -137,7 +137,9 @@ def upload_document(
     # 2) Diske güvenli kayıt
     saved = file_service.save_upload(content, file.filename or "", ext)
 
-    # 3) PostgreSQL'e doküman kaydı (sahip = current_user)
+    # 3) PostgreSQL'e doküman kaydı (sahip = current_user). Kayıt başarısız
+    #    olursa diske az önce yazılan dosya yetim kalmasın diye temizlenir;
+    #    böylece DB ile dosya sistemi tutarlı kalır.
     document = Document(
         user_id=current_user.id,
         filename=saved.stored_filename,
@@ -147,7 +149,15 @@ def upload_document(
         status="uploaded",
     )
     db.add(document)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        try:
+            file_service.delete_file(saved.file_path)
+        except (ValueError, OSError):
+            pass
+        raise
     db.refresh(document)
 
     # 4) Async işleme: adanmış worker thread'i işleri seri çalıştırır (aynı

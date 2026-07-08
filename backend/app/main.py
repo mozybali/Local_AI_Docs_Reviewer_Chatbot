@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app import models  # noqa: F401  -- tüm ORM mapper'larını (User/Document/Chunk) kaydeder
 from app.config import settings, validate_security_settings
@@ -69,6 +70,41 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
+
+
+# Dosya yükleme sınırının üzerine multipart/başlık ek yükü için pay bırakılır.
+_REQUEST_BODY_MARGIN_BYTES = 10 * 1024 * 1024
+
+
+def _max_request_bytes() -> int:
+    """Tek bir HTTP isteğinin kabul edilen azami gövde boyutu (byte)."""
+    return settings.max_file_size_bytes + _REQUEST_BODY_MARGIN_BYTES
+
+
+@app.middleware("http")
+async def request_size_limit_middleware(request: Request, call_next):
+    """Aşırı büyük istek gövdelerini gövde okunmadan reddeder (bellek DoS önlemi).
+
+    JSON uçlarında alan bazlı uzunluk sınırları ancak gövde tamamen okunup
+    ayrıştırıldıktan SONRA çalışır; `Content-Length` kontrolü bu maliyeti hiç
+    ödememizi sağlar. Not: Content-Length göndermeyen (chunked) istekler bu
+    kontrolü atlar; upload yolu ayrıca `read_upload_limited` ile korunur.
+    """
+    content_length = request.headers.get("content-length")
+    if content_length is not None:
+        try:
+            size = int(content_length)
+        except ValueError:
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "Geçersiz Content-Length başlığı."},
+            )
+        if size > _max_request_bytes():
+            return JSONResponse(
+                status_code=413,
+                content={"detail": "İstek gövdesi izin verilen boyutu aşıyor."},
+            )
+    return await call_next(request)
 
 
 @app.middleware("http")

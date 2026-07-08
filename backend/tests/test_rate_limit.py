@@ -70,3 +70,44 @@ def test_keys_are_independent():
     assert limiter.hit("a", limit=1, window_seconds=60) is True
     assert limiter.hit("b", limit=1, window_seconds=60) is True
     assert limiter.hit("a", limit=1, window_seconds=60) is False
+
+
+def test_emptied_key_is_evicted_on_touch(monkeypatch):
+    """Penceresi boşalan anahtar, tekrar dokunulduğunda sözlükten düşer."""
+    import app.utils.rate_limit as rl
+
+    fake_now = [1000.0]
+    monkeypatch.setattr(rl.time, "monotonic", lambda: fake_now[0])
+
+    limiter = SlidingWindowRateLimiter()
+    assert limiter.hit("k", limit=5, window_seconds=10) is True
+    assert "k" in limiter._events
+
+    fake_now[0] += 10.1
+    assert limiter.is_allowed("k", limit=5, window_seconds=10) is True
+    assert "k" not in limiter._events
+
+
+def test_one_shot_keys_are_swept_periodically(monkeypatch):
+    """Bir kez kullanılıp bırakılan anahtarlar süpürmeyle temizlenir.
+
+    Anahtarlar istemci kontrollüdür (örn. `login:{ip}:{email}` içindeki
+    e-posta): rastgele anahtarlarla yapılan tek seferlik denemeler süresiz
+    birikirse bellek sınırsız büyür (yavaş bellek DoS). Süpürme, pencere +
+    süpürme aralığı dışında kalan tüm kayıtları düşürmelidir.
+    """
+    import app.utils.rate_limit as rl
+
+    fake_now = [1000.0]
+    monkeypatch.setattr(rl.time, "monotonic", lambda: fake_now[0])
+
+    limiter = SlidingWindowRateLimiter()
+    for i in range(50):
+        limiter.record(f"login:1.2.3.4:rastgele{i}@x.com", window_seconds=10)
+    assert len(limiter._events) == 50
+
+    # Pencere VE süpürme aralığı geçtikten sonra herhangi bir anahtara gelen
+    # tek bir istek, eski anahtarların tamamını temizlemelidir.
+    fake_now[0] += rl._SWEEP_INTERVAL_SECONDS + 10.1
+    assert limiter.hit("baska-anahtar", limit=5, window_seconds=10) is True
+    assert set(limiter._events) == {"baska-anahtar"}

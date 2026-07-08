@@ -229,6 +229,71 @@ def test_upload_oversized_file_returns_413(client, monkeypatch):
     assert res.status_code == 413
 
 
+def test_upload_db_failure_cleans_saved_file(tmp_path, monkeypatch):
+    """DB kaydı başarısız olursa diske yazılan dosya yetim bırakılmamalı.
+
+    Upload akışı önce dosyayı diske yazar, sonra doküman satırını commit eder.
+    Commit patlarsa dosya silinmeli; aksi halde `uploads/` içinde hiçbir DB
+    kaydına bağlı olmayan yetim dosyalar birikir (tutarlılık + disk tüketimi).
+    """
+    from app.services import file_service
+
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+        future=True,
+    )
+    Base.metadata.create_all(engine)
+    TestingSession = sessionmaker(bind=engine, future=True)
+
+    seed = TestingSession()
+    seed.add(
+        User(id=1, email="u@x.com", hashed_password=hash_password("x"),
+             role="user", is_active=True)
+    )
+    seed.commit()
+    seed.close()
+
+    # Dosyalar gerçek uploads/ yerine geçici klasöre yazılsın.
+    monkeypatch.setattr(file_service, "UPLOAD_PATH", tmp_path)
+
+    class FailingCommitSession:
+        """commit() çağrısı her zaman patlayan session sarmalayıcısı."""
+
+        def __init__(self, real):
+            self._real = real
+
+        def __getattr__(self, name):
+            return getattr(self._real, name)
+
+        def commit(self):
+            raise RuntimeError("Simüle edilen DB hatası")
+
+    def override_get_db():
+        db = TestingSession()
+        try:
+            yield FailingCommitSession(db)
+        finally:
+            db.close()
+
+    app = FastAPI()
+    app.include_router(documents.router)
+    app.dependency_overrides[get_db] = override_get_db
+    client = TestClient(app, raise_server_exceptions=False)
+
+    res = client.post(
+        "/documents/upload",
+        files={"file": ("a.pdf", b"%PDF-1.7 icerik", "application/pdf")},
+        headers=_auth(1),
+    )
+    app.dependency_overrides.clear()
+
+    assert res.status_code == 500
+    # Diske yazılan dosya temizlenmiş olmalı (yetim dosya kalmaz).
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_upload_rate_limit_returns_429(client, monkeypatch):
     """Kullanıcı + IP başına yükleme sıklığı sınırlıdır (aşımda 429).
 

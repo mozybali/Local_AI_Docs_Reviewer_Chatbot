@@ -126,6 +126,17 @@ def test_ask_empty_question_returns_422(client):
     assert res.status_code == 422
 
 
+def test_ask_too_many_document_ids_returns_422(client):
+    # Sınırsız document_ids listesi dev SQL IN sorgusu / bellek tüketimi (DoS)
+    # üretebilir; şema üst sınırı aşan listeyi doğrulamada reddeder.
+    res = client.post(
+        "/chat/ask",
+        json={"question": "soru", "document_ids": list(range(201))},
+        headers=_auth(1),
+    )
+    assert res.status_code == 422
+
+
 # --- Başarılı RAG akışı --------------------------------------------------
 
 
